@@ -2,6 +2,7 @@
 'use strict';
 
 let D = null;                         // данные из data.json
+let APK = { url: 'version.json', name: '' }; // актуальный APK (из version.json)
 const $app = document.getElementById('app');
 const $nav = document.getElementById('nav');
 const timers = [];
@@ -135,7 +136,7 @@ function viewHome() {
 
     ${S.tips ? `<div class="pad" style="margin-top:14px"><div class="card flat tip"><span class="ic">${svg('bulb')}</span><div><b style="color:var(--sun-ink);font-size:.9rem">Совет дня</b><div>${rot(tips, 5000)}</div></div></div></div>` : ''}
 
-    ${isAndroid ? `<div class="pad" style="margin-top:14px"><a class="card grad-teal apk-banner" href="apk/Avalon-Patient.apk" download>${svg('android', 32)}<div><b>Установить приложение для Android</b><div class="small" style="opacity:.85">Работает без интернета · 2 МБ</div></div></a></div>` : ''}
+    ${isAndroid ? `<div class="pad" style="margin-top:14px"><a class="card grad-teal apk-banner" href="${APK.url}" download>${svg('android', 32)}<div><b>Установить приложение для Android</b><div class="small" style="opacity:.85">Версия ${APK.name} · работает без интернета · 2 МБ</div></div></a></div>` : ''}
 
     ${section('Полезно знать', '#/articles', 'Все статьи')}
     <div class="row-scroll">${D.articles.map((a, i) => articleCard(a, i)).join('')}</div>
@@ -452,7 +453,7 @@ function viewSettings() {
         <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><div style="flex:1"><b>Сбросить рекорд викторины</b><div class="small muted">${S.quizBest ? `Сейчас: ${S.quizBest}/10` : 'Рекорда пока нет'}</div></div><button class="pill ${S.quizBest ? 'coral' : ''}" data-resetquiz>Сбросить</button></div></div>
       <div class="group"><h3>📲 Приложение</h3>
         <p class="small muted">Добавьте сайт на главный экран: в Safari — «Поделиться» → «На экран „Домой“», в Chrome — меню ⋮ → «Добавить на главный экран».</p>
-        ${isAndroid ? `<a class="btn grad-teal" style="margin-top:10px" href="apk/Avalon-Patient.apk" download>${svg('android')} Скачать приложение для Android</a>` : `<a href="apk/Avalon-Patient.apk" class="small" download>Скачать APK для Android</a>`}
+        ${isAndroid ? `<a class="btn grad-teal" style="margin-top:10px" href="${APK.url}" download>${svg('android')} Скачать приложение для Android ${APK.name}</a>` : `<a href="${APK.url}" class="small" download>Скачать APK для Android ${APK.name}</a>`}
 </div></div>
       <div class="group"><img src="img/${document.documentElement.dataset.theme === 'dark' ? 'logo-white' : 'logo'}.svg" style="width:190px" alt=""><p><b>Помощник пациента · веб-версия</b></p>
         <p class="small muted">${esc(D.clinic.tagline)}<br>${esc(D.clinic.address)}<br>${esc(D.clinic.phone)}</p><p class="small muted" style="margin-top:8px">Информация в приложении не заменяет консультацию врача.</p></div>
@@ -550,5 +551,6 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { 
 // ————————————————— Старт —————————————————
 applySettings();
 buildNav();
+fetch('version.json', { cache: 'no-store' }).then(r => r.json()).then(v => { APK = { url: v.apk, name: v.versionName }; if (D) route(); }).catch(() => {});
 fetch('data.json').then(r => r.json()).then(d => { D = d; route(); document.getElementById('splash')?.classList.add('gone'); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
