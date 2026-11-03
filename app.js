@@ -457,7 +457,7 @@ function viewSettings() {
         ${isAndroid ? `<a class="btn grad-teal" style="margin-top:10px" href="${APK.url}" download>${svg('android')} Скачать приложение для Android ${APK.name}</a>` : `<a href="${APK.url}" class="small" download>Скачать APK для Android ${APK.name}</a>`}
 </div></div>
       <div class="group"><img src="img/${document.documentElement.dataset.theme === 'dark' ? 'logo-white' : 'logo'}.svg" style="width:190px" alt=""><p><b>Помощник пациента · веб-версия</b></p>
-        <p class="small muted">${esc(D.clinic.tagline)}<br>${esc(D.clinic.address)}<br>${esc(D.clinic.phone)}</p><p class="small muted" style="margin-top:8px">Информация в приложении не заменяет консультацию врача.</p></div>
+        <p class="small muted">${esc(D.clinic.tagline)}<br>${esc(D.clinic.address)}<br>${esc(D.clinic.phone)}</p><p class="small muted" style="margin-top:8px">Информация в приложении не заменяет консультацию врача.</p><p class="small"><a href="privacy.html" target="_blank">Политика конфиденциальности</a></p></div>
     </div></div><div class="spacer"></div></main>`;
 }
 

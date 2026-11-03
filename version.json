@@ -1,6 +1,6 @@
 {
- "versionCode": 7,
- "versionName": "1.6",
- "apk": "apk/Avalon-Patient-1.6.apk",
- "notes": "Онлайн-запись на приём: заявка на почту клиники"
+ "versionCode": 8,
+ "versionName": "1.7",
+ "apk": "apk/Avalon-Patient-1.7.apk",
+ "notes": "Release-сборка для магазинов: защита данных, политика конфиденциальности"
 }
