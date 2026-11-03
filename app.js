@@ -153,8 +153,8 @@ function viewHome() {
     <div class="pad"><div class="clinic-row">
       <div class="card grad-night main" data-href="#/clinic"><img src="img/logo-white.svg" alt=""><div class="small">${rot([D.clinic.address.replace('Санкт-Петербург, ', ''), 'Метро ' + D.clinic.metro, D.clinic.hours, D.clinic.phone], 2800)}</div></div>
       <div class="col" style="display:grid;gap:12px">
-        <a class="card grad-teal mini" href="tel:${D.clinic.phoneRaw}">${svg('call', 20)}Позвонить</a>
-        <a class="card grad-mint mini" href="https://yandex.ru/maps/?text=${encodeURIComponent(D.clinic.address)}" target="_blank" rel="noopener">${svg('map', 20)}Маршрут</a>
+        <a class="card grad-teal mini" href="#/booking">${svg('book', 20)}Записаться</a>
+        <a class="card grad-mint mini" href="tel:${D.clinic.phoneRaw}">${svg('call', 20)}Позвонить</a>
       </div></div></div>
     <div class="spacer"></div>
   </main>`;
@@ -333,7 +333,7 @@ function viewDoctor(id) {
       <h3 style="margin:20px 0 8px">Направления работы</h3>${d.skills.map((s, i) => `<div class="card flat enter" style="--i:${i};padding:12px;margin:6px 0" ><span class="check">${esc(s)}</span></div>`).join('')}
       <h3 style="margin:20px 0 8px">Образование и повышение квалификации</h3>${d.education.map(e => `<div class="bullet" style="--c:var(--teal)">${esc(e)}</div>`).join('')}
       <div style="height:110px"></div></div></div>
-    <a class="btn grad-teal floating-cta" href="tel:${D.clinic.phoneRaw}">${svg('call', 22)} Записаться на приём</a>`;
+    <a class="btn grad-teal floating-cta" href="#/booking/doctor/${d.id}">${svg('call', 22)} Записаться на приём</a>`;
 }
 
 // ————————————————— Клиника —————————————————
@@ -347,6 +347,7 @@ function viewClinic() {
         <a class="card" style="padding:14px;text-align:center;color:var(--ink)" href="tel:${c.phoneRaw}"><span style="color:var(--teal)">${svg('call')}</span><div class="small">Позвонить</div></a>
         <a class="card" style="padding:14px;text-align:center;color:var(--ink)" href="https://yandex.ru/maps/?text=${encodeURIComponent(c.address)}" target="_blank" rel="noopener"><span style="color:var(--mint)">${svg('map')}</span><div class="small">Маршрут</div></a>
         <a class="card" style="padding:14px;text-align:center;color:var(--ink)" href="${c.site}" target="_blank" rel="noopener"><span style="color:var(--lilac)">🌐</span><div class="small">Сайт</div></a></div>
+      <a class="card grad-teal" style="display:flex;gap:12px;align-items:center;padding:16px;margin-top:12px;color:#fff" href="#/booking">${art('Calendar', 56, 'white')}<div><b>Записаться на приём</b><div class="small" style="opacity:.85">Заявка за 1 минуту — администратор перезвонит</div></div></a>
       <div class="group">${row('📍', 'var(--coral)', 'Адрес', esc(c.address))}${row('🚇', 'var(--lilac)', 'Метро', esc(c.metro))}${row('🕘', 'var(--sun)', 'Часы работы', esc(c.hours))}
         ${row('📞', 'var(--teal)', 'Телефон', `<a href="tel:${c.phoneRaw}">${esc(c.phone)}</a>`)}${row('✅', 'var(--mint)', 'Лицензия', esc(c.license) + ', бессрочная')}</div>
 </div>
@@ -373,7 +374,7 @@ function viewPromo(id) {
     <h3 style="margin:16px 0 8px">Что входит</h3>${p.includes.map((s, i) => `<div class="card flat enter" style="--i:${i};padding:14px;margin:6px 0"><span class="check">${esc(s)}</span></div>`).join('')}
     <div class="box pale small" style="margin:14px 0">ℹ️ Итоговая стоимость определяется после консультации и диагностики. Условия и сроки акции уточняйте у администратора.</div>
     <a href="${p.url}" target="_blank" rel="noopener">Подробнее на сайте клиники →</a><div style="height:110px"></div></main>
-    <a class="btn grad-${styleMap[p.style]} floating-cta" href="tel:${D.clinic.phoneRaw}">${svg('call', 22)} Записаться по акции</a>`;
+    <a class="btn grad-${styleMap[p.style]} floating-cta" href="#/booking/service/${encodeURIComponent('Акция: ' + p.title)}">${svg('call', 22)} Записаться по акции</a>`;
 }
 function viewArticles(cat = 'Все') {
   const cats = ['Все', ...new Set(D.articles.map(a => a.category))];
@@ -460,6 +461,62 @@ function viewSettings() {
     </div></div><div class="spacer"></div></main>`;
 }
 
+
+// ————————————————— Запись на приём (письмо на почту клиники) —————————————————
+const PARTS = ['Утро · 9–12', 'День · 12–17', 'Вечер · 17–21', 'Любое время'];
+let B = null;
+function viewBooking(kind, val) {
+  if (!B || B.key !== location.hash) B = { key: location.hash, doc: kind === 'doctor' ? val : '', svc: kind === 'service' ? val : '', day: -1, part: 3, name: S.bookName || S.name || '', phone: S.bookPhone || '', comment: '', consent: false, sent: false };
+  if (B.sent) return header(`${backBtn()}<h1>Запись на приём</h1><p>Заявка готова</p>`, 'night') +
+    `<main class="wrap pad" style="max-width:720px;text-align:center">${art('Calendar', 150)}<h2>Письмо с заявкой готово</h2>
+     <p class="muted" style="margin:8px 0 16px">Проверьте, что письмо ушло на ${esc(D.clinic.email)}. Администратор перезвонит на ${esc(B.phone)} в рабочее время (9:00–21:00) и подтвердит запись.</p>
+     <a class="btn grad-teal" href="${mailto()}">✉️ Открыть письмо ещё раз</a>
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px"><button class="btn" style="background:var(--card);color:var(--ink)" data-copybooking>📋 Скопировать</button><a class="btn" style="background:var(--card);color:var(--ink)" href="tel:${D.clinic.phoneRaw}">📞 Позвонить</a></div>
+     <p style="margin-top:16px"><a href="#/">На главную</a></p></main>`;
+  const days = [-1, ...Array.from({ length: 21 }, (_, i) => i)];
+  const dname = o => { const d = new Date(); d.setDate(d.getDate() + o); return d; };
+  const svcs = [...new Set([B.svc, 'Консультация врача', ...D.clinic.directions, 'Удаление зуба', 'Удаление зуба мудрости', 'Синус-лифтинг', 'Костная пластика'].filter(Boolean))];
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><h1>Запись на приём</h1><p>Заявка за 1 минуту — администратор перезвонит</p></div>${art('Calendar', 96, 'white')}</div>`, 'night') +
+  `<main class="wrap pad" style="max-width:860px">
+    <h3 style="margin:6px 0 10px">1. К кому записаться?</h3>
+    <div class="grid" style="--cols:3;--cols-m:4;--cols-l:6">${[null, ...D.doctors].map(d => { const id = d ? d.id : 'any'; const on = B.doc === id;
+      return `<button class="card flat" style="padding:8px;text-align:center;border:2px solid ${on ? 'var(--teal)' : 'transparent'};background:${on ? 'var(--pale)' : 'var(--card)'}" data-bk="doc:${id}">
+        <span style="display:block;width:64px;height:64px;margin:0 auto;border-radius:50%;overflow:hidden;background:linear-gradient(var(--pale),var(--teal-light))">${d ? `<img src="img/${d.photo}.webp" style="width:100%;height:100%;object-fit:cover;object-position:top" alt="">` : art('Doctor', 64, 'nohalo')}</span>
+        <b class="small" style="display:block;margin-top:6px">${d ? esc(d.name.split(' ').slice(0, 2).join(' ')) : 'Любой врач'}</b><span class="small" style="color:var(--teal)">${d ? esc(d.roles[0]) : 'подберём'}</span></button>`; }).join('')}</div>
+    <p class="small muted" style="margin:12px 0 6px">или выберите услугу:</p>
+    <div class="chips">${svcs.map(x => `<button class="chip ${B.svc === x ? 'on' : ''}" data-bk="svc:${esc(x)}">${esc(x)}</button>`).join('')}</div>
+    <h3 style="margin:20px 0 10px">2. Когда вам удобно?</h3>
+    <div class="row-scroll" style="padding:0 0 8px">${days.map(o => { const on = B.day === o; const d = dname(o);
+      return `<button class="card flat" style="width:66px;padding:10px 0;text-align:center;${on ? 'background:var(--teal);color:#fff' : ''}" data-bk="day:${o}">${o < 0 ? '<b>Любой</b><div class="small">день</div>'
+        : `<div class="small">${o === 0 ? 'сегодня' : o === 1 ? 'завтра' : d.toLocaleDateString('ru', { weekday: 'short' })}</div><b style="font-size:1.3rem">${d.getDate()}</b><div class="small">${d.toLocaleDateString('ru', { month: 'short' })}</div>`}</button>`; }).join('')}</div>
+    <div class="chips" style="margin-top:6px">${PARTS.map((p, i) => `<button class="chip ${B.part === i ? 'on' : ''}" data-bk="part:${i}">${p}</button>`).join('')}</div>
+    <h3 style="margin:20px 0 10px">3. Ваши контакты</h3>
+    <div style="display:grid;gap:10px"><input type="text" id="bk-name" placeholder="Имя" value="${esc(B.name)}" maxlength="60">
+      <input type="text" id="bk-phone" inputmode="tel" placeholder="Телефон, например +7 900 000-00-00" value="${esc(B.phone)}" maxlength="20">
+      <textarea id="bk-comment" rows="2" placeholder="Комментарий (необязательно)" style="width:100%;padding:14px;border-radius:14px;border:1.5px solid var(--outline);background:var(--card);color:var(--ink);font:inherit">${esc(B.comment)}</textarea>
+      <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" id="bk-consent" ${B.consent ? 'checked' : ''} style="width:22px;height:22px;accent-color:var(--teal)">
+        <span>Даю согласие на обработку персональных данных · <a href="${D.clinic.consentUrl}" target="_blank" rel="noopener">прочитать</a></span></label></div>
+    <p class="small muted" style="margin-top:10px;text-align:center">Откроется ваша почта с готовым письмом на ${esc(D.clinic.email)} — останется нажать «Отправить».</p>
+    <div style="height:110px"></div></main>
+    <button class="btn grad-teal floating-cta" id="bk-send" data-bksend>✉️ Отправить заявку</button>`;
+}
+function bookingText() {
+  const doc = D.doctors.find(d => d.id === B.doc);
+  const d = new Date(); d.setDate(d.getDate() + B.day);
+  const date = B.day < 0 ? 'любая' : d.toLocaleDateString('ru', { weekday: 'long', day: 'numeric', month: 'long' });
+  const lines = ['Заявка на приём с сайта «Авалон · Помощник пациента»', '', `Пациент: ${B.name.trim()}`, `Телефон: ${B.phone.trim()}`,
+    `Врач: ${doc ? `${doc.name} (${doc.roles[0].toLowerCase()})` : 'любой'}`];
+  if (B.svc) lines.push(`Услуга: ${B.svc}`);
+  lines.push(`Желаемая дата: ${date}`, `Удобное время: ${PARTS[B.part].toLowerCase()}`);
+  if (B.comment.trim()) lines.push(`Комментарий: ${B.comment.trim()}`);
+  lines.push('', 'Пациент дал согласие на обработку персональных данных.', `Отправлено: ${new Date().toLocaleString('ru')}`);
+  const short = doc ? doc.name.split(' ')[0] + ' ' + doc.name.split(' ')[1][0] + '.' : (B.svc || 'любой врач');
+  return { subject: `Запись на приём: ${B.name.trim()}, ${B.phone.trim()} — ${short}`, body: lines.join('\n') };
+}
+const mailto = () => { const t = bookingText(); return `mailto:${D.clinic.email}?subject=${encodeURIComponent(t.subject)}&body=${encodeURIComponent(t.body)}`; };
+function bookingValid() { return B.name.trim() && B.phone.replace(/\D/g, '').length >= 10 && B.consent && (B.doc || B.svc); }
+function refreshSend() { const b = document.getElementById('bk-send'); if (b) b.style.opacity = bookingValid() ? 1 : .45; }
+
 // ————————————————— Навигация —————————————————
 const NAV = [['home', 'Главная', '#/'], ['book', 'Памятки', '#/guides'], ['heart', 'Мой путь', '#/tracker'], ['doc', 'Врачи', '#/doctors'], ['clinic', 'Клиника', '#/clinic'], ['gear', 'Настройки', '#/settings']];
 function renderNav(route) {
@@ -501,6 +558,7 @@ function route() {
     case 'myths': html = viewMyths(); break;
     case 'emergency': html = viewEmergency(); break;
     case 'settings': html = viewSettings(); break;
+    case 'booking': html = viewBooking(a, b); break;
     default: html = viewHome();
   }
   const keepScroll = window._replace; window._replace = false;
@@ -511,6 +569,7 @@ function route() {
   startRotators();
   if (!r) initHero();
   if (r === 'tracker' && document.getElementById('symptoms')) updateVerdict();
+  if (r === 'booking') refreshSend();
   document.querySelectorAll('[data-count]').forEach(el => { const n = +el.dataset.count; let k = 0; const t = setInterval(() => { k++; el.textContent = Math.round(n * Math.min(1, k / 30)); if (k >= 30) clearInterval(t); }, 40); timers.push(t); });
   const titles = { guide: () => byId(D.operations, a)?.title, doctor: () => byId(D.doctors, a)?.name, article: () => byId(D.articles, a)?.title, promo: () => byId(D.promos, a)?.title };
   document.title = (titles[r]?.() ? titles[r]() + ' · ' : '') + 'Авалон · Помощник пациента';
@@ -518,9 +577,17 @@ function route() {
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.bk) { const i = d.bk.indexOf(':'); const k = d.bk.slice(0, i), v = d.bk.slice(i + 1);
+    if (k === 'doc') B.doc = B.doc === v ? '' : v; else if (k === 'svc') B.svc = B.svc === v ? '' : v; else B[k] = +v;
+    window._replace = true; route(); return; }
+  if (d.bksend !== undefined) {
+    if (!bookingValid()) { toast(!(B.doc || B.svc) ? 'Выберите врача или услугу' : !B.name.trim() ? 'Укажите имя' : B.phone.replace(/\D/g, '').length < 10 ? 'Проверьте телефон' : 'Нужно согласие на обработку данных'); return; }
+    S.bookName = B.name.trim(); S.bookPhone = B.phone.trim(); store.save();
+    location.href = mailto(); B.sent = true; setTimeout(route, 400); return; }
+  if (d.copybooking !== undefined) { const t = bookingText(); navigator.clipboard?.writeText(`Кому: ${D.clinic.email}\nТема: ${t.subject}\n\n${t.body}`).then(() => toast('Заявка скопирована')); return; }
   if (d.nav) { go(d.nav); return; }
   if (d.back !== undefined) { history.length > 1 ? history.back() : go('#/'); return; }
   if (d.tip) { openTip(location.hash.split('/')[2], d.tip); return; }
@@ -542,6 +609,10 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'name') { S.name = e.target.value; store.save(); }
+  if (B && e.target.id === 'bk-name') { B.name = e.target.value; refreshSend(); }
+  if (B && e.target.id === 'bk-phone') { B.phone = e.target.value.replace(/[^\d+\-() ]/g, ''); refreshSend(); }
+  if (B && e.target.id === 'bk-comment') { B.comment = e.target.value; }
+  if (B && e.target.id === 'bk-consent') { B.consent = e.target.checked; refreshSend(); }
   if (['pain', 'sw', 'bl'].includes(e.target.id)) updateVerdict();
   if (e.target.id === 'opdate') { window._sel = Object.assign(window._sel || {}, { date: e.target.value }); }
 });

@@ -1,6 +1,6 @@
 {
- "versionCode": 6,
- "versionName": "1.5",
- "apk": "apk/Avalon-Patient-1.5.apk",
- "notes": "Проверка обновлений, QR «С собой»"
+ "versionCode": 7,
+ "versionName": "1.6",
+ "apk": "apk/Avalon-Patient-1.6.apk",
+ "notes": "Онлайн-запись на приём: заявка на почту клиники"
 }
