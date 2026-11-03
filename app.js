@@ -127,6 +127,8 @@ function viewHome() {
       <div class="card tile enter" style="--i:${i}" data-href="#/guide/${o.id}">${art(o.art, 82)}<h3>${esc(o.title)}</h3>
         ${rot([`≈ ${o.recoveryDays} дней восстановления`, `${o.dos.length} советов «можно»`, `${o.donts.length} запретов`, `${o.stages.length} этапа заживления`], 2800, i * 350)}</div>`).join('')}</div>
 
+    ${prepSection()}
+
     ${section('Проверьте себя')}
     <div class="pad"><div class="bento">
       <div class="card grad-coral small-tile" data-href="#/emergency">${art('Phone', 84, 'white')}<h3>Норма или тревога?</h3>${rot(['Когда звонить врачу', 'Что нормально после операции'], 3000)}</div>
@@ -195,7 +197,7 @@ function viewGuides() {
   `<main class="wrap"><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${D.operations.map((o, i) => `
     <div class="card tile enter" style="--i:${i};min-height:236px" data-href="#/guide/${o.id}">${art(o.art, 118)}<h3 style="font-size:1rem">${esc(o.title)}</h3>
       <p class="small muted" style="flex:1">${esc(o.subtitle)}</p><span class="pill" style="align-self:flex-start;margin-top:6px">≈ ${o.recoveryDays} дней</span></div>`).join('')}</div>
-    <div class="spacer"></div></main>`;
+    ${prepSection()}<div class="spacer"></div></main>`;
 }
 
 const TABS = ['Этапы', 'Можно', 'Нельзя', 'Питание', 'Тревога'];
@@ -229,6 +231,7 @@ function viewGuide(id, tab = 0) {
     <div class="view">${body}</div>
     <div class="disclaimer">Памятка носит информационный характер. Всегда следуйте индивидуальным рекомендациям вашего лечащего врача.</div>
     <div class="pad" style="display:grid;gap:12px">
+      ${PREP_FOR[o.id] ? `<a class="btn grad-night" href="#/prep/${PREP_FOR[o.id]}">📋 Как подготовиться к операции</a>` : ''}
       <button class="btn grad-night" data-start="${o.id}">${svg('heart', 22)} Мне сегодня сделали эту операцию — включить «Мой путь»</button>
       <button class="btn grad-teal" data-share="#/guide/${o.id}" data-title="Памятка: ${esc(o.title)}">${svg('share', 22)} Поделиться памяткой</button>
     </div><div style="height:40px"></div></main>`;
@@ -534,6 +537,69 @@ function viewReviews() {
     <p class="small muted">Рейтинги указаны по данным сайта клиники и могут меняться.</p><div style="height:40px"></div></main>`;
 }
 
+
+// ————————————————— Перед операцией: подготовка, седация и наркоз —————————————————
+const PREP_FOR = { extraction: 'prep-extraction', wisdom: 'prep-extraction', resection: 'prep-extraction', cyst: 'prep-extraction', gum: 'prep-extraction', implant: 'prep-implant', bonegraft: 'prep-implant', sinus: 'prep-sinus' };
+function prepSection() {
+  return `${section('Перед операцией')}
+    <p class="pad small muted" style="margin-bottom:8px">Как подготовиться, что взять с собой и что важно сказать врачу</p>
+    <div class="pad"><div class="card grad-lilac" style="display:flex;gap:12px;align-items:center;padding:16px" data-href="#/anesthesia">
+      <div style="flex:1"><span class="pill glass">БЕЗ БОЛИ И СТРАХА</span><h3 style="margin:8px 0 4px;font-size:1.2rem">Лечение во сне: седация и наркоз</h3>
+      ${rot(['Чем седация отличается от наркоза', 'Как подготовиться: голод 6 часов', 'Анестезиолог следит за вами всё время', 'Кому подходит и кому нельзя'], 3000)}</div>${art('Drip', 96, 'white')}</div></div>
+    <div class="grid pad" style="--cols:2;--cols-m:4;--cols-l:4;margin-top:12px">${D.prep.map((p, i) => `
+      <div class="card ${p.id === 'prep-sedation' ? 'grad-lilac' : 'grad-night'} enter" style="--i:${i};padding:14px;min-height:150px;color:#fff" data-href="#/prep/${p.id}">
+        <span style="position:absolute;top:-6px;right:-12px">${art(p.art, 80, 'white')}</span>
+        <span class="pill glass">ПОДГОТОВКА</span><h3 style="margin-top:44px;font-size:.95rem">${esc(p.title)}</h3><div class="small" style="opacity:.85">${esc(p.subtitle)}</div></div>`).join('')}</div>`;
+}
+function viewPrep(id) {
+  const p = D.prep.find(x => x.id === id); if (!p) return viewGuides();
+  S.prepChecked = S.prepChecked || {}; const ch = S.prepChecked[id] || {};
+  const total = p.steps.reduce((n, s) => n + s.items.length, 0) + p.bring.length; const done = Object.keys(ch).length;
+  const row = (k, t) => `<button class="taskrow ${ch[k] ? 'on' : ''}" style="background:transparent;padding:6px 0" data-prep="${esc(id)}|${esc(k)}"><span class="cb"><i>✓</i></span><span>${esc(t)}</span></button>`;
+  const after = p.afterGuide && byId(D.operations, p.afterGuide);
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.75">Как подготовиться</div><h1>${esc(p.title)}</h1>
+      <span class="pill glass" style="margin-top:6px">✓ Готово: ${done} из ${total}</span></div>${art(p.art, 130, 'white')}</div><p style="margin-top:10px">${esc(p.intro)}</p>`, p.id === 'prep-sedation' ? 'lilac' : 'night') +
+  `<main class="wrap pad" style="max-width:900px;display:grid;gap:12px">
+    <p class="small muted">ℹ️ Отмечайте выполненное — так ничего не забудете</p>
+    ${p.steps.map((st, si) => `<div class="stage open enter" style="--i:${si}"><div class="num">${art(st.art, 44, 'nohalo')}${si < p.steps.length - 1 ? '<i></i>' : ''}</div>
+      <div class="card flat" style="flex:1;padding:14px;margin-bottom:0"><div class="period">${esc(st.period)}</div><b>${esc(st.title)}</b>
+      ${st.items.map(it => row('s' + si + ':' + it, it)).join('')}</div></div>`).join('')}
+    <div class="box pale"><h3>🧳 Взять с собой</h3>${p.bring.map(it => row('b:' + it, it)).join('')}</div>
+    <div class="box sun"><h3>🛒 Купить заранее</h3><div class="chips">${p.buy.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>
+    <div class="box" style="background:var(--card)"><h3>Обязательно сообщите врачу</h3>${p.tell.map(x => `<div class="bullet" style="--c:var(--teal)">${esc(x)}</div>`).join('')}</div>
+    <div class="box coral"><h3>⚠️ Позвоните и обсудите перенос, если:</h3>${p.postpone.map(x => `<div class="bullet" style="--c:var(--coral)">${esc(x)}</div>`).join('')}</div>
+    <a class="card grad-lilac" style="display:flex;gap:12px;align-items:center;padding:16px;color:#fff" href="#/anesthesia">${art('Monitor', 56, 'white')}<div><b>${p.id === 'prep-sedation' ? 'Всё о седации и наркозе' : 'Лечение во сне: седация и наркоз'}</b><div class="small" style="opacity:.85">Виды, как проходит, что будет после, вопросы</div></div></a>
+    ${after ? `<a class="card grad-teal" style="display:flex;gap:12px;align-items:center;padding:16px;color:#fff" href="#/guide/${after.id}">${art(after.art, 56, 'white')}<div><b>Что делать после операции</b><div class="small" style="opacity:.85">Памятка: ${esc(after.title)}</div></div></a>` : ''}
+    <p class="small muted">Информация носит справочный характер. Точный план подготовки даст ваш врач и анестезиолог клиники.</p><div style="height:30px"></div></main>`;
+}
+const AN_TABS = ['Виды', 'Кому', 'Процесс', 'После', 'Вопросы'];
+function viewAnesthesia(tab = 0) {
+  const A = D.anesthesia; tab = Math.max(0, Math.min(4, +tab || 0));
+  const box = (cls, title, items, c) => `<div class="box ${cls}"><h3>${title}</h3>${items.map(x => `<div class="bullet" style="--c:${c}">${esc(x)}</div>`).join('')}</div>`;
+  let body;
+  if (tab === 0) body = `<div class="grid" style="--cols:1;--cols-m:3;--cols-l:3">${A.types.map((t, i) => `<div class="card flat enter" style="--i:${i};padding:16px">
+      <div style="display:flex;gap:10px;align-items:center">${art(t.art, 56)}<div><b>${esc(t.name)}</b><div class="small muted">${esc(t.short)}</div></div></div>
+      <div class="small muted" style="margin:10px 0 4px">Глубина сна ${[0, 1, 2].map(k => `<span style="display:inline-block;width:26px;height:8px;border-radius:4px;margin-left:4px;background:${k < t.depth ? 'var(--lilac)' : 'var(--lilac-pale)'}"></span>`).join('')}</div>
+      <p style="font-size:.9rem">${esc(t.how)}</p>
+      <p class="small" style="margin-top:6px"><b style="color:var(--lilac)">Дыхание:</b> ${esc(t.breathing)}<br><b style="color:var(--lilac)">Когда:</b> ${esc(t.usedFor)}<br><b style="color:var(--lilac)">После:</b> ${esc(t.wakeUp)}</p></div>`).join('')}</div>
+    <p class="small muted" style="margin-top:8px">Вариант анестезии выбирает анестезиолог вместе со стоматологом — по объёму лечения и состоянию здоровья.</p>`;
+  else if (tab === 1) body = box('mint', '✅ Кому подходит лечение во сне', A.indications, 'var(--mint)') + box('coral', '⚠️ Когда нельзя (противопоказания)', A.contraindications, 'var(--coral)') +
+    `<p class="small muted">Допуск даёт анестезиолог-реаниматолог клиники после консультации и обследования.</p>`;
+  else if (tab === 2) body = A.process.map((x, i) => `<div class="card flat enter" style="--i:${i};display:flex;gap:12px;align-items:center;padding:14px;margin:6px 0"><span class="pill" style="background:var(--lilac);color:#fff">${i + 1}</span><span>${esc(x)}</span></div>`).join('') +
+    `<a class="card grad-lilac" style="display:flex;gap:12px;align-items:center;padding:16px;margin-top:10px;color:#fff" href="#/prep/prep-sedation">${art('NoFood', 56, 'white')}<div><b>Как подготовиться к лечению во сне</b><div class="small" style="opacity:.85">Чек-лист: анализы, голод 6 часов, сопровождающий</div></div></a>`;
+  else if (tab === 3) body = box('mint', '✅ После пробуждения', A.after, 'var(--mint)') + box('coral', '⚠️ Срочно позвоните врачу, если:', A.alarms, 'var(--coral)') +
+    `<a class="btn grad-coral" href="tel:${D.clinic.phoneRaw}">${svg('call', 22)} Позвонить в клинику</a>`;
+  else body = A.faq.map((f, i) => `<details class="card flat enter" style="--i:${i};padding:14px;margin:6px 0"><summary style="font-weight:600;cursor:pointer">${esc(f.q)}</summary><p class="muted" style="margin-top:8px">${esc(f.a)}</p></details>`).join('');
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.8">Без боли и страха</div><h1>${esc(A.title)}</h1></div>${art('Monitor', 130, 'white')}</div><p style="margin-top:10px">${esc(A.intro)}</p>`, 'lilac') +
+  `<main class="wrap" style="max-width:960px"><div class="tabs" style="--t:${tab}"><span class="ind" style="background:var(--lilac)"></span>
+      ${AN_TABS.map((t, i) => `<button class="${i === tab ? 'on' : ''}" data-href="#/anesthesia/${i}" data-replace>${t}</button>`).join('')}</div>
+    <div class="view pad" style="display:grid;gap:12px;margin-top:12px">${body}</div>
+    ${section('Что можно сделать во сне в «Авалоне»')}
+    <div class="pad"><div class="group" style="padding:6px 14px">${A.services.map(x => `<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--outline)"><span style="flex:1">${esc(x.name)}</span><b style="color:var(--lilac)">${esc(x.price)}</b></div>`).join('')}</div>
+    <p class="small muted">Цены — по данным сайта клиники; итоговую стоимость определяет врач после консультации.</p>
+    <a class="btn grad-teal" style="margin-top:10px" href="#/booking/service/${encodeURIComponent('Лечение во сне (седация / наркоз)')}">Записаться на консультацию</a></div><div style="height:40px"></div></main>`;
+}
+
 // ————————————————— Навигация —————————————————
 const NAV = [['home', 'Главная', '#/'], ['book', 'Памятки', '#/guides'], ['heart', 'Мой путь', '#/tracker'], ['doc', 'Врачи', '#/doctors'], ['clinic', 'Клиника', '#/clinic'], ['gear', 'Настройки', '#/settings']];
 function renderNav(route) {
@@ -577,6 +643,8 @@ function route() {
     case 'settings': html = viewSettings(); break;
     case 'booking': html = viewBooking(a, b); break;
     case 'reviews': html = viewReviews(); break;
+    case 'prep': html = viewPrep(a); break;
+    case 'anesthesia': html = viewAnesthesia(a); break;
     default: html = viewHome();
   }
   const keepScroll = window._replace; window._replace = false;
@@ -595,9 +663,10 @@ function route() {
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.prep) { const [pid, k] = d.prep.split('|'); S.prepChecked = S.prepChecked || {}; const c = S.prepChecked[pid] = S.prepChecked[pid] || {}; c[k] ? delete c[k] : (c[k] = true); store.save(); window._replace = true; route(); return; }
   if (d.bk) { const i = d.bk.indexOf(':'); const k = d.bk.slice(0, i), v = d.bk.slice(i + 1);
     if (k === 'doc') B.doc = B.doc === v ? '' : v; else if (k === 'svc') B.svc = B.svc === v ? '' : v; else B[k] = +v;
     window._replace = true; route(); return; }

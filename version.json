@@ -1,6 +1,6 @@
 {
- "versionCode": 9,
- "versionName": "1.8",
- "apk": "apk/Avalon-Patient-1.8.apk",
- "notes": "Отзывы о клинике и режим «Планшет в клинике»"
+ "versionCode": 10,
+ "versionName": "1.9",
+ "apk": "apk/Avalon-Patient-1.9.apk",
+ "notes": "Подготовка к операции и всё о седации и наркозе"
 }
