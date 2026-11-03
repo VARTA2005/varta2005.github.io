@@ -2661,5 +2661,57 @@
   "Кровяной сгусток в лунке — это ваша природная повязка. Берегите его!",
   "Белок помогает тканям восстанавливаться: творог, йогурт, омлет, рыба.",
   "Чихайте с открытым ртом после синус-лифтинга и операций на верхней челюсти."
- ]
+ ],
+ "reviews": [
+  {
+   "name": "Яндекс Карты",
+   "rating": "5.0",
+   "url": "https:\/\/yandex.ru\/profile\/36752060965?no-distribution=1&view-state=mini&source=wizbiz_new_map_single",
+   "letter": "Я",
+   "color": "#FC3F1D"
+  },
+  {
+   "name": "2ГИС",
+   "rating": "4.8",
+   "url": "https:\/\/2gis.ru\/spb\/firm\/70000001030706908\/tab\/reviews",
+   "letter": "2",
+   "color": "#19AA1E"
+  },
+  {
+   "name": "ПроДокторов",
+   "rating": "4.8",
+   "url": "https:\/\/prodoctorov.ru\/spb\/lpu\/49972-avalon\/#rating",
+   "letter": "П",
+   "color": "#1A8FD6"
+  },
+  {
+   "name": "Google",
+   "rating": "4.8",
+   "url": "https:\/\/g.page\/r\/CatnLnJmWUpXEBM\/review",
+   "letter": "G",
+   "color": "#4285F4"
+  },
+  {
+   "name": "ДОКТУ",
+   "rating": "4.9",
+   "url": "https:\/\/doctu.ru\/spb\/clinic\/stomatologija-avalon\/reviews",
+   "letter": "Д",
+   "color": "#00A6A6"
+  },
+  {
+   "name": "НаПоправку",
+   "rating": "4.8",
+   "url": "https:\/\/spb.napopravku.ru\/clinics\/avalon-klinika-celustno-licevoj-reabilitacii\/otzyvy\/#responses",
+   "letter": "Н",
+   "color": "#2CB34A"
+  },
+  {
+   "name": "СберЗдоровье",
+   "rating": "4.8",
+   "url": "https:\/\/spb.docdoc.ru\/clinic\/avalon",
+   "letter": "С",
+   "color": "#21A038"
+  }
+ ],
+ "reviewsPage": "https:\/\/avalon-clinic.ru\/otziv\/"
 }

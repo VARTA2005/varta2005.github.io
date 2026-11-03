@@ -92,6 +92,7 @@ function viewHome() {
   } else {
     slides.push({ tag: 'МОЙ ПУТЬ', title: 'План восстановления по дням', sub: 'Укажите операцию и дату — подскажу, что делать каждый день', facts: ['Чек-лист на каждый день', 'Самопроверка симптомов'], cta: 'Начать', g: 'teal', art: 'Calendar', href: '#/tracker' });
   }
+  slides.push({ tag: 'ОТЗЫВ', title: 'Оцените клинику «Авалон»', sub: 'Отзыв на Яндексе, 2ГИС или ПроДокторов — за 1 минуту', facts: D.reviews.map(r => `${r.name} ★ ${r.rating}`), cta: 'Оставить отзыв', g: 'sun', art: 'Heart', href: '#/reviews' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После удаления зуба', sub: 'Что можно и нельзя — по дням, с картинками', facts: ['Тампон 20–30 минут', 'Холод — первые сутки', 'Не полоскать в 1-й день'], cta: 'Открыть', g: 'lilac', art: 'Tooth', href: '#/guide/extraction' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После имплантации', sub: 'Как помочь имплантату прижиться', facts: ['Не курить', 'Мягкая пища на другой стороне', 'Антибиотики — по схеме'], cta: 'Открыть', g: 'mint', art: 'Implant', href: '#/guide/implant' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После синус-лифтинга', sub: 'Главное — не создавать давления в пазухе', facts: ['Не сморкаться 2 недели', 'Чихать с открытым ртом', 'Без перелётов 2–4 недели'], cta: 'Открыть', g: 'sun', art: 'Sinus', href: '#/guide/sinus' });
@@ -517,6 +518,22 @@ const mailto = () => { const t = bookingText(); return `mailto:${D.clinic.email}
 function bookingValid() { return B.name.trim() && B.phone.replace(/\D/g, '').length >= 10 && B.consent && (B.doc || B.svc); }
 function refreshSend() { const b = document.getElementById('bk-send'); if (b) b.style.opacity = bookingValid() ? 1 : .45; }
 
+
+// ————————————————— Отзывы —————————————————
+const stars = r => Array.from({ length: 5 }, (_, i) => `<span style="color:${r >= i + .5 ? 'var(--sun)' : 'color-mix(in srgb, var(--sun) 30%, transparent)'}">★</span>`).join('');
+function viewReviews() {
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><h1>Оцените клинику «Авалон»</h1><p>Ваш отзыв помогает нам становиться лучше, а другим пациентам — выбрать врача</p>
+      <div style="margin-top:10px;font-size:1.3rem;font-weight:800">4.8–5.0 <span style="letter-spacing:2px">★★★★★</span></div></div>${art('Heart', 120, 'white')}</div>`, 'sun') +
+  `<main class="wrap pad" style="max-width:900px"><h3 style="margin:6px 0 10px">Выберите, где вам удобно оставить отзыв:</h3>
+    <div class="grid" style="--cols:1;--cols-m:2;--cols-l:3">${D.reviews.map((r, i) => `
+      <a class="card enter" style="--i:${i};display:flex;gap:12px;align-items:center;padding:14px;color:var(--ink)" href="${r.url}" target="_blank" rel="noopener">
+        <span style="width:48px;height:48px;border-radius:50%;background:${r.color};color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.3rem;flex:none">${esc(r.letter)}</span>
+        <span style="flex:1"><b>${esc(r.name)}</b><br><b>${r.rating}</b> <span style="letter-spacing:1px">${stars(+r.rating)}</span></span>
+        <span class="pill" style="background:var(--teal);color:#fff">Отзыв</span></a>`).join('')}</div>
+    <p style="margin-top:14px"><a href="${D.reviewsPage}" target="_blank" rel="noopener">Все отзывы пациентов — на сайте клиники →</a></p>
+    <p class="small muted">Рейтинги указаны по данным сайта клиники и могут меняться.</p><div style="height:40px"></div></main>`;
+}
+
 // ————————————————— Навигация —————————————————
 const NAV = [['home', 'Главная', '#/'], ['book', 'Памятки', '#/guides'], ['heart', 'Мой путь', '#/tracker'], ['doc', 'Врачи', '#/doctors'], ['clinic', 'Клиника', '#/clinic'], ['gear', 'Настройки', '#/settings']];
 function renderNav(route) {
@@ -559,6 +576,7 @@ function route() {
     case 'emergency': html = viewEmergency(); break;
     case 'settings': html = viewSettings(); break;
     case 'booking': html = viewBooking(a, b); break;
+    case 'reviews': html = viewReviews(); break;
     default: html = viewHome();
   }
   const keepScroll = window._replace; window._replace = false;

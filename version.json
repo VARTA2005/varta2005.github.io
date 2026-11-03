@@ -1,6 +1,6 @@
 {
- "versionCode": 8,
- "versionName": "1.7",
- "apk": "apk/Avalon-Patient-1.7.apk",
- "notes": "Release-сборка для магазинов: защита данных, политика конфиденциальности"
+ "versionCode": 9,
+ "versionName": "1.8",
+ "apk": "apk/Avalon-Patient-1.8.apk",
+ "notes": "Отзывы о клинике и режим «Планшет в клинике»"
 }
