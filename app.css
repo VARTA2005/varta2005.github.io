@@ -318,3 +318,15 @@ input[type=text], input[type=date] { width: 100%; padding: 14px; border-radius: 
 #splash.gone { opacity: 0; visibility: hidden; }
 #splash img { width: 96px; animation: pulse 1.6s ease-in-out infinite; }
 #splash p { color: #fff; letter-spacing: 8px; font-weight: 700; font-size: 1.6rem; margin-top: 18px; text-align: center; }
+
+/* Кнопка «Слушать» */
+.listen { display: inline-flex; align-items: center; gap: 8px; border-radius: 99px; padding: 8px 16px; font-weight: 600; font-size: .9rem;
+  background: rgba(255,255,255,.22); color: #fff; transition: background .25s, transform .15s; }
+.listen:active { transform: scale(.95); }
+.listen.light { background: var(--pale); color: var(--teal-deep); }
+.listen.on { background: var(--coral); color: #fff; }
+.listen .bars { display: inline-flex; gap: 2px; align-items: center; width: 20px; height: 20px; }
+.listen .bars i { width: 3px; height: 60%; border-radius: 2px; background: currentColor; animation: bar .42s ease-in-out infinite alternate; }
+.listen .bars i:nth-child(2) { animation-delay: .18s; } .listen .bars i:nth-child(3) { animation-delay: .36s; } .listen .bars i:nth-child(4) { animation-delay: .09s; }
+@keyframes bar { from { height: 30%; } to { height: 100%; } }
+.no-anim .listen .bars i { animation: none; }

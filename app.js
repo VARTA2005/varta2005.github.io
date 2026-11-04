@@ -67,6 +67,7 @@ const I = {
   call: 'M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z',
   map: 'M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z',
   share: 'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z',
+  vol: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z',
   play: 'M8 5v14l11-7z', bulb: 'M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z',
   android: 'M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85a.637.637 0 00-.83.22l-1.88 3.24a11.43 11.43 0 00-8.94 0L5.65 5.67a.643.643 0 00-.87-.2c-.28.18-.37.54-.22.83L6.4 9.48A10.78 10.78 0 001 18h22a10.78 10.78 0 00-5.4-8.52zM7 15.25a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zm10 0a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z',
 };
@@ -225,7 +226,7 @@ function viewGuide(id, tab = 0) {
       <div class="box sun enter" style="--i:2;display:flex;gap:10px;align-items:center">${art('SoftFood', 70)}<span>Еда — тёплая, не горячая. Жуйте на здоровой стороне. После еды аккуратно обходите рану при чистке зубов.</span></div></div>`;
   } else body = alarm(o.normal, o.redFlags);
   return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.75">Памятка после операции</div><h1>${esc(o.title)}</h1>
-      <span class="pill glass" style="margin-top:6px">Восстановление ≈ ${o.recoveryDays} дней</span></div>${art(o.art, 130, 'white')}</div>
+      <span class="pill glass" style="margin-top:6px">Восстановление ≈ ${o.recoveryDays} дней</span><div style="margin-top:10px">${listenBtn(`guide:${o.id}:${tab}`, `Слушать «${TABS[tab]}»`)}</div></div>${art(o.art, 130, 'white')}</div>
       <p style="margin-top:10px">${esc(o.about)}</p>`) +
   `<main class="wrap"><div class="tabs" style="--t:${tab}"><span class="ind" style="background:${TAB_COLORS[tab]}"></span>
       ${TABS.map((t, i) => `<button class="${i === tab ? 'on' : ''}" data-href="#/guide/${o.id}/${i}" data-replace>${t}</button>`).join('')}</div>
@@ -245,7 +246,7 @@ function alarm(normal, red) {
 }
 function openTip(guideId, key) {
   const o = byId(D.operations, guideId); const [k, i] = key.split(':'); const t = o[k][+i]; const good = k === 'dos';
-  sheet(`${art(t.art, 180)}<div><span class="pill ${good ? 'mint' : 'coral'}">${good ? '✓ РЕКОМЕНДУЕТСЯ' : '✕ НЕЛЬЗЯ'}</span></div>
+  sheet(`${art(t.art, 180)}<div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap"><span class="pill ${good ? 'mint' : 'coral'}">${good ? '✓ РЕКОМЕНДУЕТСЯ' : '✕ НЕЛЬЗЯ'}</span>${listenBtn(`tip:${guideId}:${k}.${i}`, 'Слушать', true)}</div>
     <h2 style="margin-top:12px">${esc(t.title)}</h2><b style="color:${good ? 'var(--mint)' : 'var(--coral)'}">${esc(t.short)}</b>
     <div class="box pale why"><b style="color:var(--teal-deep)">Почему это важно</b><p style="margin-top:6px">${esc(t.details)}</p></div>`);
 }
@@ -254,7 +255,7 @@ function sheet(html) {
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.innerHTML = `<div class="handle"></div>${html}`;
   document.body.append(bg, sh);
   requestAnimationFrame(() => { bg.classList.add('open'); sh.classList.add('open'); });
-  const close = () => { bg.classList.remove('open'); sh.classList.remove('open'); setTimeout(() => { bg.remove(); sh.remove(); }, 400); };
+  const close = () => { if (SAY.id && SAY.id.startsWith('tip:')) stopSpeech(); bg.classList.remove('open'); sh.classList.remove('open'); setTimeout(() => { bg.remove(); sh.remove(); }, 400); };
   bg.onclick = close; sh.querySelector('.handle').onclick = close;
 }
 
@@ -392,7 +393,7 @@ function viewArticle(id) {
   const a = byId(D.articles, id); if (!a) return viewArticles();
   const g = a.relatedGuide && byId(D.operations, a.relatedGuide);
   return header(`${backBtn()}<div class="row"><div style="flex:1"><span class="pill coral">${esc(a.category)}</span> <span class="pill glass">📖 ${a.readMin} мин</span>
-      <h1 style="margin-top:10px">${esc(a.title)}</h1><p>${esc(a.teaser)}</p></div>${art(a.art, 120, 'white')}</div>`, 'night') +
+      <h1 style="margin-top:10px">${esc(a.title)}</h1><p>${esc(a.teaser)}</p><div style="margin-top:10px">${listenBtn('article:' + a.id, 'Слушать статью')}</div></div>${art(a.art, 120, 'white')}</div>`, 'night') +
   `<main class="wrap pad" style="max-width:760px">${a.sections.map((s, i) => `<div class="card flat enter" style="--i:${i};padding:18px;margin:10px 0">
       <h3 style="display:flex;gap:10px;align-items:center"><span class="pill">${i + 1}</span>${esc(s.h)}</h3><p style="margin-top:8px;white-space:pre-line">${esc(s.b)}</p></div>`).join('')}
     ${g ? `<div class="card grad-teal" style="display:flex;gap:12px;align-items:center;padding:16px" data-href="#/guide/${g.id}">${art(g.art, 60, 'white')}<div><b>Памятка: ${esc(g.title)}</b><div class="small" style="opacity:.85">Что делать после операции — по дням</div></div></div>` : ''}
@@ -452,6 +453,9 @@ function viewSettings() {
         <b class="small">🎨 Цвет акцента</b><div style="display:flex;justify-content:space-around;margin-top:10px">${ACCENTS.map(([k, l, a, b]) => `<button style="display:grid;justify-items:center;gap:4px" data-set="accent:${k}"><span class="dot ${S.accent === k ? 'on' : ''}" style="background:linear-gradient(${a},${b})">${S.accent === k ? '✓' : ''}</span><span class="small">${l}</span></button>`).join('')}</div></div>
       <div class="group"><h3>🔠 Размер текста</h3><div class="seg">${SIZES.map(([v, l]) => `<button class="${S.scale == v ? 'on' : ''}" data-set="scale:${v}">${l}</button>`).join('')}</div>
         <div class="box pale" style="margin-top:12px">Так будет выглядеть текст памяток: держите тампон 20–30 минут.</div></div>
+      ${TTS ? `<div class="group"><h3>🔊 Чтение вслух</h3><p class="small muted" style="margin-bottom:10px">В памятках, подготовке и статьях есть кнопка «Слушать» — телефон прочитает текст голосом.</p>
+        <div class="seg">${RATES.map(([v, l]) => `<button class="${(S.rate || 1) == v ? 'on' : ''}" data-set="rate:${v}">${l}</button>`).join('')}</div>
+        <div style="margin-top:12px">${listenBtn('test', 'Проверить голос', true)}</div></div>` : ''}
     </div><div>
       <div class="group"><h3>✨ Анимации и карточки</h3>${tog('anim', 'Живые анимации', 'Движущиеся картинки и плавные переходы')}${tog('rotate', 'Автосмена карточек', 'Баннеры и карточки сами листаются и меняют информацию')}${tog('tips', 'Совет дня', 'Показывать полезные советы на главной')}</div>
       <div class="group"><h3>🗂 Данные</h3>
@@ -560,7 +564,7 @@ function viewPrep(id) {
   const row = (k, t) => `<button class="taskrow ${ch[k] ? 'on' : ''}" style="background:transparent;padding:6px 0" data-prep="${esc(id)}|${esc(k)}"><span class="cb"><i>✓</i></span><span>${esc(t)}</span></button>`;
   const after = p.afterGuide && byId(D.operations, p.afterGuide);
   return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.75">Как подготовиться</div><h1>${esc(p.title)}</h1>
-      <span class="pill glass" style="margin-top:6px">✓ Готово: ${done} из ${total}</span></div>${art(p.art, 130, 'white')}</div><p style="margin-top:10px">${esc(p.intro)}</p>`, p.id === 'prep-sedation' ? 'lilac' : 'night') +
+      <span class="pill glass" style="margin-top:6px">✓ Готово: ${done} из ${total}</span><div style="margin-top:10px">${listenBtn('prep:' + p.id)}</div></div>${art(p.art, 130, 'white')}</div><p style="margin-top:10px">${esc(p.intro)}</p>`, p.id === 'prep-sedation' ? 'lilac' : 'night') +
   `<main class="wrap pad" style="max-width:900px;display:grid;gap:12px">
     <p class="small muted">ℹ️ Отмечайте выполненное — так ничего не забудете</p>
     ${p.steps.map((st, si) => `<div class="stage open enter" style="--i:${si}"><div class="num">${art(st.art, 44, 'nohalo')}${si < p.steps.length - 1 ? '<i></i>' : ''}</div>
@@ -592,7 +596,7 @@ function viewAnesthesia(tab = 0) {
   else if (tab === 3) body = box('mint', '✅ После пробуждения', A.after, 'var(--mint)') + box('coral', '⚠️ Срочно позвоните врачу, если:', A.alarms, 'var(--coral)') +
     `<a class="btn grad-coral" href="tel:${D.clinic.phoneRaw}">${svg('call', 22)} Позвонить в клинику</a>`;
   else body = A.faq.map((f, i) => `<details class="card flat enter" style="--i:${i};padding:14px;margin:6px 0"><summary style="font-weight:600;cursor:pointer">${esc(f.q)}</summary><p class="muted" style="margin-top:8px">${esc(f.a)}</p></details>`).join('');
-  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.8">Без боли и страха</div><h1>${esc(A.title)}</h1></div>${art('Monitor', 130, 'white')}</div><p style="margin-top:10px">${esc(A.intro)}</p>`, 'lilac') +
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.8">Без боли и страха</div><h1>${esc(A.title)}</h1><div style="margin-top:10px">${listenBtn('anesthesia:' + tab, `Слушать «${AN_TABS[tab]}»`)}</div></div>${art('Monitor', 130, 'white')}</div><p style="margin-top:10px">${esc(A.intro)}</p>`, 'lilac') +
   `<main class="wrap" style="max-width:960px"><div class="tabs" style="--t:${tab}"><span class="ind" style="background:var(--lilac)"></span>
       ${AN_TABS.map((t, i) => `<button class="${i === tab ? 'on' : ''}" data-href="#/anesthesia/${i}" data-replace>${t}</button>`).join('')}</div>
     <div class="view pad" style="display:grid;gap:12px;margin-top:12px">${body}</div>
@@ -602,6 +606,69 @@ function viewAnesthesia(tab = 0) {
     <a class="btn grad-teal" style="margin-top:10px" href="#/booking/service/${encodeURIComponent('Лечение во сне (седация / наркоз)')}">Записаться на консультацию</a></div><div style="height:40px"></div></main>`;
 }
 
+
+// ————————————————— Чтение вслух (синтезатор речи браузера) —————————————————
+const TTS = window.speechSynthesis && window.SpeechSynthesisUtterance ? speechSynthesis : null;
+const SAY = { id: null, gen: 0 };
+const RATES = [[.8, 'Медленно'], [1, 'Обычно'], [1.2, 'Быстро']];
+const OUTRO = 'Памятка носит информационный характер. Всегда следуйте рекомендациям вашего лечащего врача.';
+const sayList = a => a.map(x => String(x).replace(/[.\s]+$/, '')).join('. ') + '.';
+const ruVoice = () => { const v = TTS.getVoices(); return v.find(x => /^ru[-_]RU/i.test(x.lang) && x.localService) || v.find(x => /^ru/i.test(x.lang)); };
+function speechFor(id) {
+  const [k, a, b] = id.split(':'); const out = [];
+  if (k === 'guide') {
+    const o = byId(D.operations, a); const t = +b; out.push(o.title + '.');
+    if (t === 0) { out.push('Этапы восстановления.'); o.stages.forEach((st, i) => { out.push(`Этап ${i + 1}. ${st.period}. ${st.title}. ${st.whatHappens}`); if (st.tasks.length) out.push('Что делать: ' + sayList(st.tasks)); }); }
+    else if (t === 1 || t === 2) { out.push(t === 1 ? 'Что можно и нужно делать.' : 'Чего делать нельзя.'); (t === 1 ? o.dos : o.donts).forEach(x => out.push(`${x.title}. ${x.short.replace(/\.$/, '')}. ${x.details}`)); }
+    else if (t === 3) out.push('Питание. Можно есть: ' + sayList(o.foodYes), 'Лучше исключить: ' + sayList(o.foodNo), 'Еда — тёплая, не горячая. Жуйте на здоровой стороне.');
+    else out.push('Это нормально: ' + sayList(o.normal), 'Срочно позвоните врачу, если: ' + sayList(o.redFlags));
+    out.push(OUTRO);
+  } else if (k === 'tip') {
+    const o = byId(D.operations, a); const [kk, i] = b.split('.'); const x = o[kk][+i];
+    out.push(`${x.title}. ${x.short.replace(/\.$/, '')}. ${x.details}`);
+  } else if (k === 'prep') {
+    const p = D.prep.find(x => x.id === a); out.push(`Как подготовиться. ${p.title}. ${p.intro}`);
+    p.steps.forEach(st => out.push(`${st.period}. ${st.title}. ` + sayList(st.items)));
+    out.push('Взять с собой: ' + sayList(p.bring), 'Купить заранее: ' + sayList(p.buy), 'Обязательно сообщите врачу: ' + sayList(p.tell), 'Когда операцию лучше перенести: ' + sayList(p.postpone), OUTRO);
+  } else if (k === 'anesthesia') {
+    const A = D.anesthesia; const t = +a;
+    if (t === 0) { out.push(`${A.title}. ${A.intro}`); A.types.forEach(x => out.push(`${x.name}. ${x.short}. ${x.how} Дыхание: ${x.breathing}. Когда применяют: ${x.usedFor}. Пробуждение: ${x.wakeUp}.`)); }
+    else if (t === 1) out.push('Кому подходит лечение во сне: ' + sayList(A.indications), 'Противопоказания: ' + sayList(A.contraindications));
+    else if (t === 2) out.push('Как проходит лечение во сне. ' + sayList(A.process.map((x, i) => `Шаг ${i + 1}. ${x}`)));
+    else if (t === 3) out.push('После седации или наркоза: ' + sayList(A.after), 'Срочно позвоните в клинику, если: ' + sayList(A.alarms));
+    else { out.push('Частые вопросы.'); A.faq.forEach(f => out.push(`${f.q} ${f.a}`)); }
+    out.push('Вариант анестезии подбирает анестезиолог. Следуйте рекомендациям вашего врача.');
+  } else if (k === 'article') {
+    const x = byId(D.articles, a); out.push(`${x.title}. ${x.teaser}`); x.sections.forEach(s => out.push(`${s.h}. ${s.b}`));
+  } else out.push('Здравствуйте! Так звучит чтение памяток. Держите марлевый тампон двадцать–тридцать минут.');
+  return out;
+}
+/** Кнопка «Слушать» / «Стоп»: light — на светлом фоне. */
+function listenBtn(id, label = 'Слушать', light = false) {
+  if (!TTS) return '';
+  const on = SAY.id === id;
+  return `<button class="listen ${light ? 'light' : ''} ${on ? 'on' : ''}" data-listen="${esc(id)}" data-label="${esc(label)}" aria-label="${on ? 'Остановить чтение' : 'Прочитать вслух'}">${listenInner(on, label)}</button>`;
+}
+const listenInner = (on, label) => on ? `<span class="bars"><i></i><i></i><i></i><i></i></span><span>Стоп</span>` : `${svg('vol', 20)}<span>${esc(label)}</span>`;
+function refreshListen() {
+  document.querySelectorAll('[data-listen]').forEach(b => { const on = b.dataset.listen === SAY.id; b.classList.toggle('on', on); b.innerHTML = listenInner(on, b.dataset.label); });
+}
+function stopSpeech() { if (!TTS) return; SAY.gen++; SAY.id = null; TTS.cancel(); refreshListen(); }
+function speak(id) {
+  if (!TTS) { toast('Этот браузер не умеет читать вслух'); return; }
+  TTS.cancel(); const g = ++SAY.gen; SAY.id = id; refreshListen();
+  const voice = ruVoice();
+  if (!voice && TTS.getVoices().length) toast('Русский голос не найден — установите его в настройках устройства');
+  // Режем на предложения: Chrome обрывает длинные фразы.
+  const chunks = speechFor(id).flatMap(t => t.match(/[^.!?…]+[.!?…]*\s*/g) || [t]).map(t => t.trim().replace(/([!?…:])\./g, '$1')).filter(Boolean);
+  chunks.forEach((t, i) => {
+    const u = new SpeechSynthesisUtterance(t); u.lang = 'ru-RU'; if (voice) u.voice = voice; u.rate = S.rate || 1;
+    if (i === chunks.length - 1) u.onend = () => { if (g === SAY.gen) { SAY.id = null; refreshListen(); } };
+    u.onerror = e => { if (g === SAY.gen && e.error !== 'interrupted' && e.error !== 'canceled') { SAY.id = null; refreshListen(); } };
+    TTS.speak(u);
+  });
+}
+if (TTS) { TTS.getVoices(); TTS.addEventListener?.('voiceschanged', () => {}); }
 
 // ————————————————— Установка сайта как приложения —————————————————
 let installPrompt = null;   // событие браузера «можно установить» (Chrome, Edge, Samsung Internet)
@@ -686,6 +753,7 @@ async function share(h, title) {
 function route() {
   clearTimers();
   document.querySelectorAll('.sheet,.sheet-bg').forEach(e => e.remove());
+  const speaking = SAY.id;
   const parts = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent);
   const [r, a, b] = parts;
   let html;
@@ -716,6 +784,7 @@ function route() {
   $app.innerHTML = `<div class="${keepScroll ? '' : 'view'}">${html}</div>`;
   scrollTo(0, keepScroll ? y : 0);
   renderNav(r || '');
+  if (speaking && !document.querySelector(`[data-listen="${CSS.escape(speaking)}"]`)) stopSpeech();
   startRotators();
   if (!r) initHero();
   if (r === 'tracker' && document.getElementById('symptoms')) updateVerdict();
@@ -727,9 +796,10 @@ function route() {
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-listen],[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.listen) { SAY.id === d.listen ? stopSpeech() : speak(d.listen); return; }
   if (d.install !== undefined) { if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; window._replace = true; route(); }); } return; }
   if (d.prep) { const [pid, k] = d.prep.split('|'); S.prepChecked = S.prepChecked || {}; const c = S.prepChecked[pid] = S.prepChecked[pid] || {}; c[k] ? delete c[k] : (c[k] = true); store.save(); window._replace = true; route(); return; }
   if (d.bk) { const i = d.bk.indexOf(':'); const k = d.bk.slice(0, i), v = d.bk.slice(i + 1);
@@ -751,7 +821,7 @@ document.addEventListener('click', e => {
   if (d.reset !== undefined) { S.track = null; S.checked = {}; store.save(); route(); return; }
   if (d.resetquiz !== undefined) { S.quizBest = 0; store.save(); window._replace = true; route(); return; }
   if (d.task) { S.checked[d.task] ? delete S.checked[d.task] : (S.checked[d.task] = true); store.save(); el.classList.toggle('on'); window._replace = true; setTimeout(route, 350); return; }
-  if (d.set) { const [k, v] = d.set.split(':'); S[k] = k === 'scale' ? +v : v; store.save(); applySettings(); window._replace = true; route(); return; }
+  if (d.set) { const [k, v] = d.set.split(':'); S[k] = k === 'scale' || k === 'rate' ? +v : v; store.save(); applySettings(); window._replace = true; route(); return; }
   if (d.toggle) { S[d.toggle] = !S[d.toggle]; store.save(); applySettings(); window._replace = true; route(); return; }
   if (d.ans) { const k = +d.ans; Q.answered = k; if (k === D.quiz[Q.i].correct) Q.score++; window._replace = true; route(); return; }
   if (d.next !== undefined) { Q.i++; Q.answered = null; if (Q.i >= D.quiz.length && Q.score > S.quizBest) { S.quizBest = Q.score; store.save(); } route(); return; }
