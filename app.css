@@ -34,8 +34,10 @@ html { font-size: calc(16px * var(--scale)); }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: Roboto, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.45; overflow-x: hidden; min-height: 100vh;
+  line-height: 1.45; overflow-x: hidden; overflow-x: clip; min-height: 100vh;
 }
+/* Ничто не должно расширять страницу по горизонтали (иначе на телефоне меняется масштаб и плавающее меню уезжает). */
+html { overflow-x: hidden; overflow-x: clip; }
 button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; }
 a { color: var(--teal); text-decoration: none; }
 h1, h2, h3, p { margin: 0; }
@@ -48,7 +50,8 @@ h1, h2, h3, p { margin: 0; }
 .enter { animation: enter .55s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--i, 0) * 55ms); }
 @keyframes enter { from { opacity: 0; transform: translateY(26px) scale(.96); } to { opacity: 1; transform: none; } }
 .view { animation: view .38s ease both; }
-@keyframes view { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+/* Смена страницы — сдвиг по вертикали: сдвиг вправо делал страницу шире экрана, Chrome уменьшал масштаб и меню уезжало вниз. */
+@keyframes view { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .no-anim *, .no-anim *::before, .no-anim *::after { animation: none !important; transition: none !important; }
 
 /* ——— Шапка с волной ——— */
