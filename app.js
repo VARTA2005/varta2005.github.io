@@ -223,7 +223,7 @@ function viewGuide(id, tab = 0) {
     body = `<div class="hint">👆 Нажмите на этап, чтобы увидеть, что делать</div><div class="pad">${o.stages.map((s, i) => `
       <div class="stage ${i === 0 ? 'open' : ''} enter" style="--i:${i}"><div class="num"><b>${i + 1}</b>${i < o.stages.length - 1 ? '<i></i>' : ''}</div>
         <div class="card" data-toggle-stage><div class="period">${esc(s.period)}</div><b>${esc(s.title)}</b>
-          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o) + ((hs) => howToRow(hs, 'Как правильно', `Для этой операции — ${hs.length} из ${D.howtos.length}. Все инструкции — по кнопке «Все»`))((D.howtos || []).filter(h => h.ops.includes(o.id)));
+          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o) + ((hs) => howToRow(hs, 'Как правильно', `Для этой памятки — ${hs.length} из ${D.howtos.length}. Все инструкции — по кнопке «Все»`))((D.howtos || []).filter(h => h.ops.includes(o.id)));
   } else if (tab === 1 || tab === 2) {
     const good = tab === 1; const list = good ? o.dos : o.donts;
     body = `<div class="hint">👆 Нажмите на картинку — расскажу подробнее</div><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${list.map((t, i) => `
@@ -269,7 +269,10 @@ function openTip(guideId, key) {
     <div class="box pale why"><b style="color:var(--teal-deep)">Почему это важно</b><p style="margin-top:6px">${esc(t.details)}</p></div>
     ${howToForTip(t.title) ? `<a class="btn grad-teal" style="margin-top:12px" href="#/howto/${howToForTip(t.title)}">▶ Показать, как правильно — по шагам</a>` : ''}`);
 }
-const howToForTip = title => [['Тампон', 'gauze'], ['Холод', 'ice'], ['Ванночки', 'bath'], ['Заживляющая паста', 'paste'], ['Чистить зубы', 'brush'], ['Гимнастика', 'jaw'], ['Чихать', 'sneeze']].find(([p]) => title.startsWith(p))?.[1];
+const howToForTip = title => [['Тампон', 'gauze'], ['Холод', 'ice'], ['Ванночки', 'bath'], ['Заживляющая паста', 'paste'], ['Чистить зубы', 'brush'], ['Гимнастика', 'jaw'], ['Чихать', 'sneeze'],
+  ['Нить', 'floss'], ['Ирригатор', 'irrigator'], ['Мягкая щётка', 'brushing'], ['Осмотр', 'prevention'], ['Профгигиена', 'prevention'], ['Поддержка', 'prevention'], ['Контроль', 'prevention'],
+  ['«Белая диета»', 'whitediet'], ['Меньше красящего', 'whitediet'], ['Ортодонтическая щётка', 'bracescare'], ['Воск', 'bracescare'], ['20–22 часа', 'aligners'], ['Почистить — и надеть', 'aligners'],
+  ['Капа — от 12', 'aligners'], ['Футляр', 'aligners'], ['Чистить после еды', 'denturecare'], ['Домашние капы', 'homewhite']].find(([p]) => title.startsWith(p))?.[1];
 function sheet(html) {
   const bg = document.createElement('div'); bg.className = 'sheet-bg';
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.innerHTML = `<div class="handle"></div>${html}`;
@@ -579,7 +582,7 @@ function howToRow(list, title = 'Как правильно', sub = 'Анимир
     `<div class="hrow">${list.map(howToCard).join('')}</div>`;
 }
 function viewHowTos() {
-  return header(`${backBtn()}<h1>Как правильно</h1><p>Покажем по шагам: тампон, холод, ванночки, паста на швы, чистка зубов и другое</p>`) +
+  return header(`${backBtn()}<h1>Как правильно</h1><p>Покажем по шагам: тампон, холод, ванночки, паста на швы, чистка зубов, нить, ирригатор, брекеты, капы, протез, отбеливание и профилактика</p>`) +
     `<main class="wrap pad"><div class="grid" style="--cols:2;--cols-m:3;--cols-l:4">${D.howtos.map(howToCard).join('')}</div>
     <div class="disclaimer">Информация носит справочный характер. Всегда следуйте рекомендациям вашего лечащего врача.</div><div class="spacer"></div></main>`;
 }
