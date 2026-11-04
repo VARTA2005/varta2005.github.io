@@ -272,7 +272,7 @@ function openTip(guideId, key) {
 const howToForTip = title => [['Тампон', 'gauze'], ['Холод', 'ice'], ['Ванночки', 'bath'], ['Заживляющая паста', 'paste'], ['Чистить зубы', 'brush'], ['Гимнастика', 'jaw'], ['Чихать', 'sneeze'],
   ['Нить', 'floss'], ['Ирригатор', 'irrigator'], ['Мягкая щётка', 'brushing'], ['Осмотр', 'prevention'], ['Профгигиена', 'prevention'], ['Поддержка', 'prevention'], ['Контроль', 'prevention'],
   ['«Белая диета»', 'whitediet'], ['Меньше красящего', 'whitediet'], ['Ортодонтическая щётка', 'bracescare'], ['Воск', 'bracescare'], ['20–22 часа', 'aligners'], ['Почистить — и надеть', 'aligners'],
-  ['Капа — от 12', 'aligners'], ['Футляр', 'aligners'], ['Чистить после еды', 'denturecare'], ['Домашние капы', 'homewhite']].find(([p]) => title.startsWith(p))?.[1];
+  ['Капа — от 12', 'aligners'], ['Футляр', 'aligners'], ['Чистить после еды', 'denturecare'], ['Крем для фиксации', 'denturefix'], ['Домашние капы', 'homewhite']].find(([p]) => title.startsWith(p))?.[1];
 function sheet(html) {
   const bg = document.createElement('div'); bg.className = 'sheet-bg';
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.innerHTML = `<div class="handle"></div>${html}`;
