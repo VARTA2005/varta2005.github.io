@@ -129,6 +129,7 @@ function viewHome() {
       <div class="card tile enter" style="--i:${i}" data-href="#/guide/${o.id}">${art(o.art, 82)}<h3>${esc(o.title)}</h3>
         ${rot([`≈ ${o.recoveryDays} дней восстановления`, `${o.dos.length} советов «можно»`, `${o.donts.length} запретов`, `${o.stages.length} этапа заживления`], 2800, i * 350)}</div>`).join('')}</div>
 
+    ${howToRow(D.howtos || [])}
     ${prepSection()}
 
     ${section('Проверьте себя')}
@@ -212,7 +213,7 @@ function viewGuide(id, tab = 0) {
     body = `<div class="hint">👆 Нажмите на этап, чтобы увидеть, что делать</div><div class="pad">${o.stages.map((s, i) => `
       <div class="stage ${i === 0 ? 'open' : ''} enter" style="--i:${i}"><div class="num"><b>${i + 1}</b>${i < o.stages.length - 1 ? '<i></i>' : ''}</div>
         <div class="card" data-toggle-stage><div class="period">${esc(s.period)}</div><b>${esc(s.title)}</b>
-          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o);
+          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o) + howToRow((D.howtos || []).filter(h => h.ops.includes(o.id)), 'Как правильно', 'Посмотрите по шагам, как это делать');
   } else if (tab === 1 || tab === 2) {
     const good = tab === 1; const list = good ? o.dos : o.donts;
     body = `<div class="hint">👆 Нажмите на картинку — расскажу подробнее</div><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${list.map((t, i) => `
@@ -254,8 +255,10 @@ function openTip(guideId, key) {
   const o = byId(D.operations, guideId); const [k, i] = key.split(':'); const t = o[k][+i]; const good = k === 'dos';
   sheet(`${art(t.art, 180)}<div style="display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap"><span class="pill ${good ? 'mint' : 'coral'}">${good ? '✓ РЕКОМЕНДУЕТСЯ' : '✕ НЕЛЬЗЯ'}</span>${listenBtn(`tip:${guideId}:${k}.${i}`, 'Слушать', true)}</div>
     <h2 style="margin-top:12px">${esc(t.title)}</h2><b style="color:${good ? 'var(--mint)' : 'var(--coral)'}">${esc(t.short)}</b>
-    <div class="box pale why"><b style="color:var(--teal-deep)">Почему это важно</b><p style="margin-top:6px">${esc(t.details)}</p></div>`);
+    <div class="box pale why"><b style="color:var(--teal-deep)">Почему это важно</b><p style="margin-top:6px">${esc(t.details)}</p></div>
+    ${howToForTip(t.title) ? `<a class="btn grad-teal" style="margin-top:12px" href="#/howto/${howToForTip(t.title)}">▶ Показать, как правильно — по шагам</a>` : ''}`);
 }
+const howToForTip = title => [['Тампон', 'gauze'], ['Холод', 'ice'], ['Ванночки', 'bath'], ['Заживляющая паста', 'paste'], ['Чистить зубы', 'brush'], ['Гимнастика', 'jaw'], ['Чихать', 'sneeze']].find(([p]) => title.startsWith(p))?.[1];
 function sheet(html) {
   const bg = document.createElement('div'); bg.className = 'sheet-bg';
   const sh = document.createElement('div'); sh.className = 'sheet'; sh.innerHTML = `<div class="handle"></div>${html}`;
@@ -552,6 +555,70 @@ function viewReviews() {
 
 // ————————————————— Перед операцией: подготовка, седация и наркоз —————————————————
 const PREP_FOR = { extraction: 'prep-extraction', wisdom: 'prep-extraction', resection: 'prep-extraction', cyst: 'prep-extraction', gum: 'prep-extraction', implant: 'prep-implant', bonegraft: 'prep-implant', sinus: 'prep-sinus' };
+// ————————————————— Как правильно: анимированные инструкции —————————————————
+const sceneImg = (name, cls = '') => `<img class="scene ${cls}" src="art/${name}${S.anim ? '' : '_s'}.webp" alt="" loading="lazy" decoding="async">`;
+const stepsWord = n => plural(n, 'шаг', 'шага', 'шагов');
+function howToCard(h, i = 0) {
+  return `<a class="card htcard enter" style="--i:${i}" href="#/howto/${h.id}">${sceneImg(h.cover)}<span class="pill dark">${h.steps.length} ${stepsWord(h.steps.length)}</span>
+    <div style="padding:10px 12px 12px"><b>${esc(h.title)}</b><div class="small muted">${esc(h.subtitle)}</div></div></a>`;
+}
+function howToRow(list, title = 'Как правильно', sub = 'Анимированные пошаговые инструкции с озвучкой') {
+  if (!list.length) return '';
+  return section(title, list.length === (D.howtos || []).length ? '#/howto' : null) + (sub ? `<p class="small muted wrap" style="padding:0 16px">${sub}</p>` : '') +
+    `<div class="hrow">${list.map(howToCard).join('')}</div>`;
+}
+function viewHowTos() {
+  return header(`${backBtn()}<h1>Как правильно</h1><p>Покажем по шагам: тампон, холод, ванночки, паста на швы, чистка зубов и другое</p>`) +
+    `<main class="wrap pad"><div class="grid" style="--cols:2;--cols-m:3;--cols-l:4">${D.howtos.map(howToCard).join('')}</div>
+    <div class="disclaimer">Информация носит справочный характер. Всегда следуйте рекомендациям вашего лечащего врача.</div><div class="spacer"></div></main>`;
+}
+const HT = { auto: false };
+function viewHowTo(id, stepArg) {
+  const h = (D.howtos || []).find(x => x.id === id); if (!h) return viewHowTos();
+  const step = Math.max(0, Math.min(h.steps.length - 1, +stepArg || 0)); const st = h.steps[step]; const last = step === h.steps.length - 1;
+  const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const timer = st.timer ? `<div class="httimer" id="httimer" data-total="${st.timer}" data-left="${st.timer}">
+      <div class="ring" style="--k:1"><b id="httime">${fmt(st.timer)}</b></div>
+      <div style="flex:1"><b>⏱ ${esc(st.timerLabel)}</b><div class="small muted">${st.timer >= 60 ? `Таймер на ${st.timer / 60} мин — не нужно смотреть на часы` : `Таймер на ${st.timer} секунд`}</div>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="pill tealbtn" data-httimer>▶ Запустить</button><button class="pill" data-htreset>↺ Сначала</button></div></div></div>` : '';
+  return header(`${backBtn()}<div class="small" style="opacity:.75">Как правильно</div><h1>${esc(h.title)}</h1><p>${esc(h.subtitle)}</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${listenBtn('howto:' + h.id, 'Слушать всё')}
+      ${h.steps.length > 1 ? `<button class="listen ${HT.auto ? 'light' : ''}" data-htauto>${HT.auto ? '⏸ Пауза' : '▶ Показать подряд'}</button>` : ''}</div>`) +
+  `<main class="wrap pad" style="max-width:1100px">
+    <div class="stepbar">${h.steps.map((_, i) => `<button class="${i <= step ? 'on' : ''}" data-href="#/howto/${h.id}/${i}" data-replace aria-label="Шаг ${i + 1}"></button>`).join('')}</div>
+    <div class="htgrid">
+      <div class="stage view">${sceneImg(st.scene)}<span class="pill dark">Шаг ${step + 1} из ${h.steps.length}</span></div>
+      <div class="view"><h2 style="margin-top:4px">${esc(st.title)}</h2><p style="font-size:1.05rem;margin:8px 0 12px">${esc(st.text)}</p>
+        ${listenBtn(`howtostep:${h.id}:${step}`, 'Слушать шаг', true)}
+        <div class="htnav"><button class="btn ghost" ${step ? `data-href="#/howto/${h.id}/${step - 1}" data-replace` : 'disabled'}>← Назад</button>
+          ${last ? `<button class="btn grad-mint" data-back>Готово ✓</button>` : `<button class="btn grad-teal" data-href="#/howto/${h.id}/${step + 1}" data-replace>Дальше →</button>`}</div>
+        ${timer}</div>
+    </div>
+    <h3 style="margin:18px 0 6px">Все шаги</h3>
+    ${h.steps.map((x, i) => `<button class="htstep ${i === step ? 'on' : ''}" data-href="#/howto/${h.id}/${i}" data-replace><span class="num">${i + 1}</span><span><b>${esc(x.title)}</b><span class="small muted" style="display:block">${esc(x.text)}</span></span></button>`).join('')}
+    <div class="disclaimer">Информация носит справочный характер. Всегда следуйте рекомендациям вашего лечащего врача.</div></main>` +
+  howToRow(D.howtos.filter(x => x.id !== h.id), 'Ещё инструкции', null) + `<div class="spacer"></div>`;
+}
+function startHowTo(id, step) {
+  const h = (D.howtos || []).find(x => x.id === id); if (!h) return;
+  if (HT.auto) timers.push(setTimeout(() => {
+    if (step < h.steps.length - 1) { window._replace = true; history.replaceState(null, '', `#/howto/${id}/${step + 1}`); route(); } else { HT.auto = false; window._replace = true; route(); }
+  }, 7000));
+}
+function tickTimer(run) {
+  const el = document.getElementById('httimer'); if (!el) return;
+  if (el._iv) { clearInterval(el._iv); el._iv = null; }
+  const btn = el.querySelector('[data-httimer]');
+  const draw = () => { const left = +el.dataset.left, total = +el.dataset.total;
+    el.querySelector('#httime').textContent = left ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '✓';
+    el.querySelector('.ring').style.setProperty('--k', left / total); el.classList.toggle('done', !left); };
+  if (run) {
+    if (+el.dataset.left === 0) el.dataset.left = el.dataset.total;
+    el._iv = setInterval(() => { el.dataset.left = Math.max(0, +el.dataset.left - 1); draw(); if (+el.dataset.left === 0) { clearInterval(el._iv); el._iv = null; btn.textContent = '▶ Ещё раз'; navigator.vibrate?.(300); } }, 1000);
+    timers.push(el._iv); btn.textContent = '⏸ Пауза';
+  } else btn.textContent = +el.dataset.left < +el.dataset.total ? '▶ Продолжить' : '▶ Запустить';
+  draw();
+}
 function prepSection() {
   return `${section('Перед операцией')}
     <p class="pad small muted" style="margin-bottom:8px">Как подготовиться, что взять с собой и что важно сказать врачу</p>
@@ -648,6 +715,10 @@ function speechFor(id) {
     out.push('Вариант анестезии подбирает анестезиолог. Следуйте рекомендациям вашего врача.');
   } else if (k === 'article') {
     const x = byId(D.articles, a); out.push(`${x.title}. ${x.teaser}`); x.sections.forEach(s => out.push(`${s.h}. ${s.b}`));
+  } else if (k === 'howto') {
+    const h = D.howtos.find(x => x.id === a); out.push(`${h.title}. ${h.subtitle}.`); h.steps.forEach((x, i) => out.push(`Шаг ${i + 1}. ${x.title}. ${x.text}`)); out.push('Следуйте рекомендациям вашего лечащего врача.');
+  } else if (k === 'howtostep') {
+    const x = D.howtos.find(h => h.id === a).steps[+b]; out.push(`Шаг ${+b + 1}. ${x.title}. ${x.text}`);
   } else out.push('Здравствуйте! Так звучит чтение памяток. Держите марлевый тампон пятнадцать–двадцать минут.');
   return out;
 }
@@ -785,6 +856,7 @@ function route() {
     case 'prep': html = viewPrep(a); break;
     case 'install': html = viewInstall(a); break;
     case 'anesthesia': html = viewAnesthesia(a); break;
+    case 'howto': html = a ? viewHowTo(a, b) : viewHowTos(); break;
     default: html = viewHome();
   }
   const keepScroll = window._replace; window._replace = false;
@@ -797,16 +869,21 @@ function route() {
   if (!r) initHero();
   if (r === 'tracker' && document.getElementById('symptoms')) updateVerdict();
   if (r === 'booking') refreshSend();
+  if (r !== 'howto') HT.auto = false;
+  if (r === 'howto' && a) startHowTo(a, Math.max(0, +b || 0));
   document.querySelectorAll('[data-count]').forEach(el => { const n = +el.dataset.count; let k = 0; const t = setInterval(() => { k++; el.textContent = Math.round(n * Math.min(1, k / 30)); if (k >= 30) clearInterval(t); }, 40); timers.push(t); });
-  const titles = { guide: () => byId(D.operations, a)?.title, doctor: () => byId(D.doctors, a)?.name, article: () => byId(D.articles, a)?.title, promo: () => byId(D.promos, a)?.title };
+  const titles = { howto: () => (D.howtos || []).find(x => x.id === a)?.title, guide: () => byId(D.operations, a)?.title, doctor: () => byId(D.doctors, a)?.name, article: () => byId(D.articles, a)?.title, promo: () => byId(D.promos, a)?.title };
   document.title = (titles[r]?.() ? titles[r]() + ' · ' : '') + 'Авалон · Помощник пациента';
 }
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-listen],[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-htauto],[data-httimer],[data-htreset],[data-listen],[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.htauto !== undefined) { HT.auto = !HT.auto; const m = location.hash.match(/^#\/howto\/([^/]+)\/?(\d*)/); if (HT.auto && m) { const h = D.howtos.find(x => x.id === m[1]); if (h && +m[2] >= h.steps.length - 1) { history.replaceState(null, '', `#/howto/${m[1]}/0`); } } window._replace = true; route(); return; }
+  if (d.httimer !== undefined) { const t = document.getElementById('httimer'); tickTimer(!t._iv); return; }
+  if (d.htreset !== undefined) { const t = document.getElementById('httimer'); t.dataset.left = t.dataset.total; tickTimer(false); return; }
   if (d.listen) { SAY.id === d.listen ? stopSpeech() : speak(d.listen); return; }
   if (d.install !== undefined) { if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; window._replace = true; route(); }); } return; }
   if (d.prep) { const [pid, k] = d.prep.split('|'); S.prepChecked = S.prepChecked || {}; const c = S.prepChecked[pid] = S.prepChecked[pid] || {}; c[k] ? delete c[k] : (c[k] = true); store.save(); window._replace = true; route(); return; }

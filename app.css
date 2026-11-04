@@ -333,3 +333,36 @@ input[type=text], input[type=date] { width: 100%; padding: 14px; border-radius: 
 .listen .bars i:nth-child(2) { animation-delay: .18s; } .listen .bars i:nth-child(3) { animation-delay: .36s; } .listen .bars i:nth-child(4) { animation-delay: .09s; }
 @keyframes bar { from { height: 30%; } to { height: 100%; } }
 .no-anim .listen .bars i { animation: none; }
+
+/* «Как правильно» */
+.scene { display: block; width: 100%; aspect-ratio: 1; border-radius: 24px; background: var(--pale); }
+.hrow { display: flex; gap: 12px; overflow-x: auto; padding: 6px 16px 12px; scroll-padding-inline: 16px; scroll-snap-type: x mandatory; scrollbar-width: none; max-width: 1200px; margin: 0 auto; }
+.hrow::-webkit-scrollbar { display: none; }
+.hrow .htcard { flex: 0 0 168px; scroll-snap-align: start; }
+@media (min-width: 600px) { .hrow .htcard { flex-basis: 196px; } }
+.htcard { position: relative; display: block; padding: 0; overflow: hidden; color: inherit; text-decoration: none; }
+.htcard .scene { border-radius: 24px 24px 0 0; }
+.htcard .pill, .stage .pill { position: absolute; top: 10px; left: 10px; }
+.pill.dark { background: color-mix(in srgb, var(--teal-deep) 88%, transparent); color: #fff; }
+.stepbar { display: flex; gap: 6px; margin: 4px 0 14px; }
+.stepbar button { flex: 1; height: 8px; border-radius: 4px; background: var(--pale); transition: background .4s; }
+.stepbar button.on { background: var(--teal); }
+.htgrid { display: grid; gap: 16px; }
+@media (min-width: 900px) { .htgrid { grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; } }
+.stage { position: relative; border-radius: 28px; overflow: hidden; background: var(--card); box-shadow: 0 14px 34px color-mix(in srgb, var(--teal-deep) 22%, transparent); max-width: 560px; width: 100%; margin: 0 auto; }
+.stage .scene { border-radius: 0; }
+.htnav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; margin-top: 14px; }
+.htnav .btn { margin: 0; }
+.btn.ghost { background: var(--pale); color: var(--teal-deep); }
+.btn.ghost[disabled] { opacity: .45; }
+.httimer { display: flex; gap: 14px; align-items: center; margin-top: 14px; padding: 16px; border-radius: 24px; background: var(--sun-pale); }
+.httimer.done { background: var(--mint-pale); }
+.httimer .ring { --k: 1; width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: radial-gradient(closest-side, var(--sun-pale) 79%, transparent 80% 100%), conic-gradient(var(--sun) calc(var(--k) * 360deg), #fff 0); }
+.httimer.done .ring { background: radial-gradient(closest-side, var(--mint-pale) 79%, transparent 80% 100%), conic-gradient(var(--mint) 360deg, #fff 0); }
+.httimer .ring b { font-size: 1.1rem; }
+.pill.tealbtn { background: var(--teal); color: #fff; }
+.htstep { display: flex; gap: 10px; width: 100%; text-align: left; padding: 12px; margin: 6px 0; border-radius: 18px; background: var(--card); color: inherit; }
+.htstep.on { background: var(--pale); }
+.htstep .num { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--pale); color: var(--teal-deep); }
+.htstep.on .num { background: var(--teal); color: #fff; }
