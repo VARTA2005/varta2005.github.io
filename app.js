@@ -92,6 +92,7 @@ function viewHome() {
   } else {
     slides.push({ tag: 'МОЙ ПУТЬ', title: 'План восстановления по дням', sub: 'Укажите операцию и дату — подскажу, что делать каждый день', facts: ['Чек-лист на каждый день', 'Самопроверка симптомов'], cta: 'Начать', g: 'teal', art: 'Calendar', href: '#/tracker' });
   }
+  if (!isStandalone()) slides.push({ tag: 'ПРИЛОЖЕНИЕ', title: 'Установите «Авалон» на телефон', sub: 'Значок на экране, открывается как приложение, работает без интернета', facts: ['iPhone и Android', 'Windows и Mac', 'Бесплатно, без магазина'], cta: 'Как установить', g: 'teal', art: 'Phone', href: '#/install' });
   slides.push({ tag: 'ОТЗЫВ', title: 'Оцените клинику «Авалон»', sub: 'Отзыв на Яндексе, 2ГИС или ПроДокторов — за 1 минуту', facts: D.reviews.map(r => `${r.name} ★ ${r.rating}`), cta: 'Оставить отзыв', g: 'sun', art: 'Heart', href: '#/reviews' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После удаления зуба', sub: 'Что можно и нельзя — по дням, с картинками', facts: ['Тампон 20–30 минут', 'Холод — первые сутки', 'Не полоскать в 1-й день'], cta: 'Открыть', g: 'lilac', art: 'Tooth', href: '#/guide/extraction' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После имплантации', sub: 'Как помочь имплантату прижиться', facts: ['Не курить', 'Мягкая пища на другой стороне', 'Антибиотики — по схеме'], cta: 'Открыть', g: 'mint', art: 'Implant', href: '#/guide/implant' });
@@ -457,7 +458,8 @@ function viewSettings() {
         <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><div style="flex:1"><b>Сбросить «Мой путь»</b><div class="small muted">${S.track ? 'Операция: ' + esc(byId(D.operations, S.track.op)?.title) : 'Восстановление не отслеживается'}</div></div><button class="pill ${S.track ? 'coral' : ''}" data-reset>Сбросить</button></div>
         <div style="display:flex;align-items:center;gap:8px;margin:6px 0"><div style="flex:1"><b>Сбросить рекорд викторины</b><div class="small muted">${S.quizBest ? `Сейчас: ${S.quizBest}/10` : 'Рекорда пока нет'}</div></div><button class="pill ${S.quizBest ? 'coral' : ''}" data-resetquiz>Сбросить</button></div></div>
       <div class="group"><h3>📲 Приложение</h3>
-        <p class="small muted">Добавьте сайт на главный экран: в Safari — «Поделиться» → «На экран „Домой“», в Chrome — меню ⋮ → «Добавить на главный экран».</p>
+        <p class="small muted">${isStandalone() ? '✓ «Авалон» установлен как приложение.' : 'Установите сайт как приложение: значок на экране, работа без интернета.'}</p>
+        ${isStandalone() ? '' : `<a class="btn grad-mint" style="margin-top:10px" href="#/install">📲 Как установить — инструкция</a>`}
         ${isAndroid ? `<a class="btn grad-teal" style="margin-top:10px" href="${APK.url}" download>${svg('android')} Скачать приложение для Android ${APK.name}</a>` : `<a href="${APK.url}" class="small" download>Скачать APK для Android ${APK.name}</a>`}
 </div></div>
       <div class="group"><img src="img/${document.documentElement.dataset.theme === 'dark' ? 'logo-white' : 'logo'}.svg" style="width:190px" alt=""><p><b>Помощник пациента · веб-версия</b></p>
@@ -600,6 +602,67 @@ function viewAnesthesia(tab = 0) {
     <a class="btn grad-teal" style="margin-top:10px" href="#/booking/service/${encodeURIComponent('Лечение во сне (седация / наркоз)')}">Записаться на консультацию</a></div><div style="height:40px"></div></main>`;
 }
 
+
+// ————————————————— Установка сайта как приложения —————————————————
+let installPrompt = null;   // событие браузера «можно установить» (Chrome, Edge, Samsung Internet)
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; if (location.hash.startsWith('#/install')) { window._replace = true; route(); } });
+window.addEventListener('appinstalled', () => { installPrompt = null; toast('Приложение установлено ✓'); });
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+function detectPlatform() {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 1;
+  if (/Android/i.test(ua)) return 0;
+  if (/Mac/i.test(ua)) return 3;
+  return 2;
+}
+const INSTALL = [
+  { name: 'Android', icon: 'android', steps: [
+    ['Откройте сайт в Chrome', 'Адрес: varta2005.github.io. Подойдёт и Samsung Internet или Яндекс Браузер.'],
+    ['Нажмите «Установить»', 'Если вверху этой страницы есть зелёная кнопка «Установить в одно нажатие» — нажмите её. Если нет: меню ⋮ (три точки справа вверху) → «Добавить на главный экран» или «Установить приложение».'],
+    ['Подтвердите', 'Нажмите «Установить» или «Добавить» в окне браузера.'],
+    ['Готово', 'На рабочем столе появится значок «Авалон». Он открывается как обычное приложение, во весь экран и без интернета.'],
+  ], extra: 'Можно установить и полноценное Android-приложение (APK) — кнопка внизу.' },
+  { name: 'iPhone / iPad', icon: 'share', steps: [
+    ['Откройте сайт в Safari', 'Адрес: varta2005.github.io. На iOS 16.4 и новее подойдёт и Chrome — через ту же кнопку «Поделиться».'],
+    ['Нажмите «Поделиться»', 'Квадрат со стрелкой вверх: на iPhone — внизу экрана, на iPad — вверху справа.'],
+    ['«На экран „Домой“»', 'Пролистайте список действий вниз и выберите «На экран „Домой“».'],
+    ['Нажмите «Добавить»', 'Значок «Авалон» появится рядом с другими приложениями и будет открываться во весь экран.'],
+  ] },
+  { name: 'Windows', icon: 'doc', steps: [
+    ['Откройте сайт в Edge или Chrome', 'Адрес: varta2005.github.io.'],
+    ['Установите', 'Если на этой странице есть кнопка «Установить в одно нажатие» — нажмите её. Или: Edge — меню «…» → «Приложения» → «Установить этот сайт как приложение»; Chrome — значок установки (монитор со стрелкой) справа в адресной строке.'],
+    ['Подтвердите «Установить»', 'Приложение откроется в отдельном окне.'],
+    ['Запускайте из «Пуска»', '«Авалон» появится в меню «Пуск»; его можно закрепить на панели задач.'],
+  ] },
+  { name: 'Mac', icon: 'clinic', steps: [
+    ['Откройте сайт в Safari или Chrome', 'Адрес: varta2005.github.io.'],
+    ['Safari: «Файл» → «Добавить в Dock»', 'Работает в macOS Sonoma и новее. Нажмите «Добавить».'],
+    ['Chrome: значок установки', 'Справа в адресной строке (монитор со стрелкой) → «Установить». Или кнопка «Установить в одно нажатие» на этой странице.'],
+    ['Запускайте из Dock или Launchpad', '«Авалон» откроется в отдельном окне, как обычная программа.'],
+  ] },
+];
+function viewInstall(tab) {
+  const t = tab === undefined || tab === '' ? detectPlatform() : Math.max(0, Math.min(3, +tab));
+  const P = INSTALL[t];
+  const done = isStandalone();
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.8">Как обычное приложение</div><h1>Установить на телефон или компьютер</h1>
+      <p>Значок «Авалон» на экране, открывается во весь экран, памятки доступны без интернета. Бесплатно и без магазина приложений.</p></div>
+      <img src="img/icon-192.png" alt="" style="width:96px;height:96px;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:breathe 4s ease-in-out infinite"></div>`, 'night') +
+  `<main class="wrap pad" style="max-width:860px;display:grid;gap:12px">
+    ${done ? `<div class="box mint" style="display:flex;gap:10px;align-items:center"><b style="font-size:1.4rem">✓</b><div><b>Уже установлено</b><div class="small">Вы открыли «Авалон» как приложение.</div></div></div>` : ''}
+    ${!done && installPrompt ? `<button class="btn grad-mint" data-install style="font-size:1.05rem">⬇️ Установить в одно нажатие</button>` : ''}
+    <div class="tabs" style="--t:${t};grid-template-columns:repeat(4,1fr);margin:0"><span class="ind" style="width:calc((100% - 8px) / 4)"></span>
+      ${INSTALL.map((x, i) => `<button class="${i === t ? 'on' : ''}" data-href="#/install/${i}" data-replace>${x.name}</button>`).join('')}</div>
+    <div class="view" style="display:grid;gap:8px">${P.steps.map(([h, d], i) => `
+      <div class="card flat enter" style="--i:${i};display:flex;gap:12px;padding:14px">
+        <span style="width:32px;height:32px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700;flex:none">${i + 1}</span>
+        <div><b>${h}</b><div class="muted" style="font-size:.92rem;margin-top:2px">${d}</div></div></div>`).join('')}
+      ${P.extra ? `<p class="small muted">${P.extra}</p>` : ''}</div>
+    ${t === 0 ? `<a class="btn grad-teal" href="${APK.url}" download>${svg('android')} Скачать Android-приложение ${APK.name}</a>` : ''}
+    <p class="small muted">Ваши отметки в «Моём пути» и настройки хранятся только на вашем устройстве.</p>
+    <div style="height:30px"></div></main>`;
+}
+
 // ————————————————— Навигация —————————————————
 const NAV = [['home', 'Главная', '#/'], ['book', 'Памятки', '#/guides'], ['heart', 'Мой путь', '#/tracker'], ['doc', 'Врачи', '#/doctors'], ['clinic', 'Клиника', '#/clinic'], ['gear', 'Настройки', '#/settings']];
 function renderNav(route) {
@@ -644,6 +707,7 @@ function route() {
     case 'booking': html = viewBooking(a, b); break;
     case 'reviews': html = viewReviews(); break;
     case 'prep': html = viewPrep(a); break;
+    case 'install': html = viewInstall(a); break;
     case 'anesthesia': html = viewAnesthesia(a); break;
     default: html = viewHome();
   }
@@ -663,9 +727,10 @@ function route() {
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.install !== undefined) { if (installPrompt) { installPrompt.prompt(); installPrompt.userChoice.finally(() => { installPrompt = null; window._replace = true; route(); }); } return; }
   if (d.prep) { const [pid, k] = d.prep.split('|'); S.prepChecked = S.prepChecked || {}; const c = S.prepChecked[pid] = S.prepChecked[pid] || {}; c[k] ? delete c[k] : (c[k] = true); store.save(); window._replace = true; route(); return; }
   if (d.bk) { const i = d.bk.indexOf(':'); const k = d.bk.slice(0, i), v = d.bk.slice(i + 1);
     if (k === 'doc') B.doc = B.doc === v ? '' : v; else if (k === 'svc') B.svc = B.svc === v ? '' : v; else B[k] = +v;
