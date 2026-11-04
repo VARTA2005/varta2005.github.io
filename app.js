@@ -95,7 +95,7 @@ function viewHome() {
   }
   if (!isStandalone()) slides.push({ tag: 'ПРИЛОЖЕНИЕ', title: 'Установите «Авалон» на телефон', sub: 'Значок на экране, открывается как приложение, работает без интернета', facts: ['iPhone и Android', 'Windows и Mac', 'Бесплатно, без магазина'], cta: 'Как установить', g: 'teal', art: 'Phone', href: '#/install' });
   slides.push({ tag: 'ОТЗЫВ', title: 'Оцените клинику «Авалон»', sub: 'Отзыв на Яндексе, 2ГИС или ПроДокторов — за 1 минуту', facts: D.reviews.map(r => `${r.name} ★ ${r.rating}`), cta: 'Оставить отзыв', g: 'sun', art: 'Heart', href: '#/reviews' });
-  slides.push({ tag: 'ПАМЯТКА', title: 'После удаления зуба', sub: 'Что можно и нельзя — по дням, с картинками', facts: ['Тампон 20–30 минут', 'Холод — первые сутки', 'Не полоскать в 1-й день'], cta: 'Открыть', g: 'lilac', art: 'Tooth', href: '#/guide/extraction' });
+  slides.push({ tag: 'ПАМЯТКА', title: 'После удаления зуба', sub: 'Что можно и нельзя — по дням, с картинками', facts: ['Тампон 15–20 минут', 'Холод — первые сутки', 'Не полоскать в 1-й день'], cta: 'Открыть', g: 'lilac', art: 'Tooth', href: '#/guide/extraction' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После имплантации', sub: 'Как помочь имплантату прижиться', facts: ['Не курить', 'Мягкая пища на другой стороне', 'Антибиотики — по схеме'], cta: 'Открыть', g: 'mint', art: 'Implant', href: '#/guide/implant' });
   slides.push({ tag: 'ПАМЯТКА', title: 'После синус-лифтинга', sub: 'Главное — не создавать давления в пазухе', facts: ['Не сморкаться 2 недели', 'Чихать с открытым ртом', 'Без перелётов 2–4 недели'], cta: 'Открыть', g: 'sun', art: 'Sinus', href: '#/guide/sinus' });
   slides.push({ tag: 'ВАЖНО', title: 'Норма или тревога?', sub: 'Когда всё идёт по плану, а когда срочно звонить врачу', facts: ['Отёк до 3 дней — норма', 'Кровь дольше 40 минут — звоните'], cta: 'Узнать', g: 'coral', art: 'Phone', href: '#/emergency' });
@@ -212,7 +212,7 @@ function viewGuide(id, tab = 0) {
     body = `<div class="hint">👆 Нажмите на этап, чтобы увидеть, что делать</div><div class="pad">${o.stages.map((s, i) => `
       <div class="stage ${i === 0 ? 'open' : ''} enter" style="--i:${i}"><div class="num"><b>${i + 1}</b>${i < o.stages.length - 1 ? '<i></i>' : ''}</div>
         <div class="card" data-toggle-stage><div class="period">${esc(s.period)}</div><b>${esc(s.title)}</b>
-          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>`;
+          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o);
   } else if (tab === 1 || tab === 2) {
     const good = tab === 1; const list = good ? o.dos : o.donts;
     body = `<div class="hint">👆 Нажмите на картинку — расскажу подробнее</div><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${list.map((t, i) => `
@@ -237,6 +237,12 @@ function viewGuide(id, tab = 0) {
       <button class="btn grad-night" data-start="${o.id}">${svg('heart', 22)} Мне сегодня сделали эту операцию — включить «Мой путь»</button>
       <button class="btn grad-teal" data-share="#/guide/${o.id}" data-title="Памятка: ${esc(o.title)}">${svg('share', 22)} Поделиться памяткой</button>
     </div><div style="height:40px"></div></main>`;
+}
+function careBlock(o) {
+  const c = o.care || [], d = o.dates || [];
+  return `<div class="pad" style="display:grid;gap:12px;margin-top:4px">
+    ${c.length ? `<div class="box pale enter"><h3>💊 Уход и лекарства</h3><p class="small muted" style="margin:2px 0 6px">По памятке клиники «Авалон». Препараты — только те, что назначил ваш врач.</p>${c.map(x => `<div class="bullet" style="--c:var(--teal)">${esc(x)}</div>`).join('')}</div>` : ''}
+    ${d.length ? `<div class="box sun enter" style="--i:1"><h3>📅 Важные сроки</h3>${d.map(x => `<div class="bullet" style="--c:var(--sun)">${esc(x)}</div>`).join('')}</div>` : ''}</div>`;
 }
 function alarm(normal, red) {
   return `<div class="pad" style="display:grid;gap:12px;margin-top:8px">
@@ -309,7 +315,7 @@ function updateVerdict() {
   const alarm = bl >= 3 || pain >= 4 || sw >= 4 || (day >= 3 && (pain >= 3 || sw >= 3));
   const caution = !alarm && (bl >= 2 || pain >= 3 || sw >= 3);
   const [cls, t, x] = alarm ? ['coral', 'Нужно связаться с врачом', 'Такие симптомы требуют осмотра. Позвоните в клинику — врач подскажет, что делать.']
-    : caution ? ['sun', 'Понаблюдайте', bl >= 2 ? 'Прикусите стерильный марлевый тампон на 20–30 минут. Если кровь не остановится — звоните врачу.' : 'В первые дни это бывает. Холод, покой и лекарства по схеме. Если станет хуже — звоните.']
+    : caution ? ['sun', 'Понаблюдайте', bl >= 2 ? 'Прикусите стерильный марлевый тампон на 15–20 минут. Если кровь не остановится — звоните врачу.' : 'В первые дни это бывает. Холод, покой и лекарства по схеме. Если станет хуже — звоните.']
     : ['mint', 'Всё идёт по плану', 'Ваше самочувствие соответствует нормальному заживлению. Продолжайте следовать памятке!'];
   document.getElementById('verdict').innerHTML = `<div class="box ${cls} view" style="margin-top:8px"><b>${t}</b><p>${x}</p>${alarm ? `<a class="pill coral" style="margin-top:8px;padding:10px 16px" href="tel:${D.clinic.phoneRaw}">📞 Позвонить в клинику</a>` : ''}</div>`;
 }
@@ -452,7 +458,7 @@ function viewSettings() {
       <div class="group"><h3>🌗 Оформление</h3><b class="small">Тема</b><div class="seg" style="margin:8px 0 16px">${[['system', 'Как в системе'], ['light', 'Светлая'], ['dark', 'Тёмная']].map(([k, l]) => `<button class="${S.theme === k ? 'on' : ''}" data-set="theme:${k}">${l}</button>`).join('')}</div>
         <b class="small">🎨 Цвет акцента</b><div style="display:flex;justify-content:space-around;margin-top:10px">${ACCENTS.map(([k, l, a, b]) => `<button style="display:grid;justify-items:center;gap:4px" data-set="accent:${k}"><span class="dot ${S.accent === k ? 'on' : ''}" style="background:linear-gradient(${a},${b})">${S.accent === k ? '✓' : ''}</span><span class="small">${l}</span></button>`).join('')}</div></div>
       <div class="group"><h3>🔠 Размер текста</h3><div class="seg">${SIZES.map(([v, l]) => `<button class="${S.scale == v ? 'on' : ''}" data-set="scale:${v}">${l}</button>`).join('')}</div>
-        <div class="box pale" style="margin-top:12px">Так будет выглядеть текст памяток: держите тампон 20–30 минут.</div></div>
+        <div class="box pale" style="margin-top:12px">Так будет выглядеть текст памяток: держите тампон 15–20 минут.</div></div>
       ${TTS ? `<div class="group"><h3>🔊 Чтение вслух</h3><p class="small muted" style="margin-bottom:10px">В памятках, подготовке и статьях есть кнопка «Слушать» — телефон прочитает текст голосом.</p>
         <div class="seg">${RATES.map(([v, l]) => `<button class="${(S.rate || 1) == v ? 'on' : ''}" data-set="rate:${v}">${l}</button>`).join('')}</div>
         <div style="margin-top:12px">${listenBtn('test', 'Проверить голос', true)}</div></div>` : ''}
@@ -618,10 +624,12 @@ function speechFor(id) {
   const [k, a, b] = id.split(':'); const out = [];
   if (k === 'guide') {
     const o = byId(D.operations, a); const t = +b; out.push(o.title + '.');
-    if (t === 0) { out.push('Этапы восстановления.'); o.stages.forEach((st, i) => { out.push(`Этап ${i + 1}. ${st.period}. ${st.title}. ${st.whatHappens}`); if (st.tasks.length) out.push('Что делать: ' + sayList(st.tasks)); }); }
+    if (t === 0) { out.push('Этапы восстановления.'); o.stages.forEach((st, i) => { out.push(`Этап ${i + 1}. ${st.period}. ${st.title}. ${st.whatHappens}`); if (st.tasks.length) out.push('Что делать: ' + sayList(st.tasks)); });
+      if ((o.care || []).length) out.push('Уход и лекарства. Препараты — только те, что назначил ваш врач. ' + sayList(o.care));
+      if ((o.dates || []).length) out.push('Важные сроки: ' + sayList(o.dates)); }
     else if (t === 1 || t === 2) { out.push(t === 1 ? 'Что можно и нужно делать.' : 'Чего делать нельзя.'); (t === 1 ? o.dos : o.donts).forEach(x => out.push(`${x.title}. ${x.short.replace(/\.$/, '')}. ${x.details}`)); }
     else if (t === 3) out.push('Питание. Можно есть: ' + sayList(o.foodYes), 'Лучше исключить: ' + sayList(o.foodNo), 'Еда — тёплая, не горячая. Жуйте на здоровой стороне.');
-    else out.push('Это нормально: ' + sayList(o.normal), 'Срочно позвоните врачу, если: ' + sayList(o.redFlags));
+    else out.push('Это нормально: ' + sayList(o.normal), 'Срочно позвоните врачу, если: ' + sayList(o.redFlags), 'Телефон клиники: 8 812 501 75 01.');
     out.push(OUTRO);
   } else if (k === 'tip') {
     const o = byId(D.operations, a); const [kk, i] = b.split('.'); const x = o[kk][+i];
@@ -640,7 +648,7 @@ function speechFor(id) {
     out.push('Вариант анестезии подбирает анестезиолог. Следуйте рекомендациям вашего врача.');
   } else if (k === 'article') {
     const x = byId(D.articles, a); out.push(`${x.title}. ${x.teaser}`); x.sections.forEach(s => out.push(`${s.h}. ${s.b}`));
-  } else out.push('Здравствуйте! Так звучит чтение памяток. Держите марлевый тампон двадцать–тридцать минут.');
+  } else out.push('Здравствуйте! Так звучит чтение памяток. Держите марлевый тампон пятнадцать–двадцать минут.');
   return out;
 }
 /** Кнопка «Слушать» / «Стоп»: light — на светлом фоне. */
