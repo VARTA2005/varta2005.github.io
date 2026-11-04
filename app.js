@@ -123,11 +123,12 @@ function viewHome() {
       <div style="flex:1"><b>${esc(op.title)}</b><div class="small" style="opacity:.85">${rot([`Сейчас: ${stageOf(op, day).title.toLowerCase()}`, stageOf(op, day).tasks[0]], 3000)}</div>
       <div class="bar-line"><i style="width:${Math.max(2, Math.min(100, day / op.recoveryDays * 100))}%"></i></div></div><span>→</span></div></div>` : ''}
 
-    ${section('Памятки после операций', '#/guides')}
-    <p class="pad small muted" style="margin-bottom:8px">Выберите свою операцию — что можно, что нельзя и что делать по дням</p>
-    <div class="grid pad" style="--cols:2;--cols-m:4;--cols-l:4">${D.operations.map((o, i) => `
+    ${section('Памятки после лечения', '#/guides')}
+    <p class="pad small muted" style="margin-bottom:2px">Выберите раздел и свою процедуру — что можно, что нельзя и что делать по дням</p>
+    ${secChips()}
+    <div class="grid pad" style="--cols:2;--cols-m:4;--cols-l:4">${opsIn(SEC).map((o, i) => `
       <div class="card tile enter" style="--i:${i}" data-href="#/guide/${o.id}">${art(o.art, 82)}<h3>${esc(o.title)}</h3>
-        ${rot([`≈ ${o.recoveryDays} дней восстановления`, `${o.dos.length} советов «можно»`, `${o.donts.length} запретов`, `${o.stages.length} этапа заживления`], 2800, i * 350)}</div>`).join('')}</div>
+        ${rot([o.section && o.section !== 'Surgery' ? o.period : `≈ ${o.recoveryDays} дней восстановления`, `${o.dos.length} советов «можно»`, `${o.donts.length} запретов`, `${o.stages.length} этапа по дням`], 2800, i * 350)}</div>`).join('')}</div>
 
     ${howToRow(D.howtos || [])}
     ${prepSection()}
@@ -195,12 +196,21 @@ function initHero() {
 }
 
 // ————————————————— Памятки —————————————————
+// ————————————————— Разделы памяток —————————————————
+let SEC = 'Surgery';
+const opsIn = sec => D.operations.filter(o => (o.section || 'Surgery') === sec);
+function secChips() {
+  const list = D.sections || [{ id: 'Surgery', title: 'Хирургия' }];
+  return `<div class="hrow secchips">${list.map(s => `<button class="secchip ${s.id === SEC ? 'on' : ''}" data-sec="${s.id}">${art(s.art, 30, 'nohalo')}<b>${esc(s.title)}</b><span>${opsIn(s.id).length}</span></button>`).join('')}</div>`;
+}
+const secShort = () => (D.sections || []).find(s => s.id === SEC)?.short || '';
+const periodOf = o => o.period || `Восстановление ≈ ${o.recoveryDays} дней`;
 function viewGuides() {
-  return header(`<h1 class="enter">Памятки</h1><p class="enter" style="--i:1">Выберите вашу операцию — покажу, что можно и что нельзя, по дням</p>`) +
-  `<main class="wrap"><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${D.operations.map((o, i) => `
+  return header(`<h1 class="enter">Памятки</h1><p class="enter" style="--i:1">Хирургия, терапия, ортопедия, гигиена, пародонтология и ортодонтия — что можно и что нельзя, по дням</p>`) +
+  `<main class="wrap">${secChips()}<p class="pad small muted" style="margin:0 0 6px">${esc(secShort())}</p><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${opsIn(SEC).map((o, i) => `
     <div class="card tile enter" style="--i:${i};min-height:236px" data-href="#/guide/${o.id}">${art(o.art, 118)}<h3 style="font-size:1rem">${esc(o.title)}</h3>
-      <p class="small muted" style="flex:1">${esc(o.subtitle)}</p><span class="pill" style="align-self:flex-start;margin-top:6px">≈ ${o.recoveryDays} дней</span></div>`).join('')}</div>
-    ${prepSection()}<div class="spacer"></div></main>`;
+      <p class="small muted" style="flex:1">${esc(o.subtitle)}</p><span class="pill" style="align-self:flex-start;margin-top:6px">${esc(o.period && !(o.section === 'Surgery') ? o.period : `≈ ${o.recoveryDays} дней`)}</span></div>`).join('')}</div>
+    ${SEC === 'Surgery' ? prepSection() : ''}<div class="spacer"></div></main>`;
 }
 
 const TABS = ['Этапы', 'Можно', 'Нельзя', 'Питание', 'Тревога'];
@@ -226,8 +236,8 @@ function viewGuide(id, tab = 0) {
       <div class="box coral enter" style="--i:1"><h3>⛔ Лучше исключить</h3><div class="chips">${o.foodNo.map(f => `<button class="chip">${esc(f)}</button>`).join('')}</div></div>
       <div class="box sun enter" style="--i:2;display:flex;gap:10px;align-items:center">${art('SoftFood', 70)}<span>Еда — тёплая, не горячая. Жуйте на здоровой стороне. После еды аккуратно обходите рану при чистке зубов.</span></div></div>`;
   } else body = alarm(o.normal, o.redFlags);
-  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.75">Памятка после операции</div><h1>${esc(o.title)}</h1>
-      <span class="pill glass" style="margin-top:6px">Восстановление ≈ ${o.recoveryDays} дней</span><div style="margin-top:10px">${listenBtn(`guide:${o.id}:${tab}`, `Слушать «${TABS[tab]}»`)}</div></div>${art(o.art, 130, 'white')}</div>
+  return header(`${backBtn()}<div class="row"><div style="flex:1"><div class="small" style="opacity:.75">${o.section && o.section !== 'Surgery' ? 'Памятка · ' + esc((D.sections.find(s => s.id === o.section) || {}).title || '') : 'Памятка после операции'}</div><h1>${esc(o.title)}</h1>
+      <span class="pill glass" style="margin-top:6px">${esc(periodOf(o))}</span><div style="margin-top:10px">${listenBtn(`guide:${o.id}:${tab}`, `Слушать «${TABS[tab]}»`)}</div></div>${art(o.art, 130, 'white')}</div>
       <p style="margin-top:10px">${esc(o.about)}</p>`) +
   `<main class="wrap"><div class="tabs" style="--t:${tab}"><span class="ind" style="background:${TAB_COLORS[tab]}"></span>
       ${TABS.map((t, i) => `<button class="${i === tab ? 'on' : ''}" data-href="#/guide/${o.id}/${i}" data-replace>${t}</button>`).join('')}</div>
@@ -235,7 +245,7 @@ function viewGuide(id, tab = 0) {
     <div class="disclaimer">Памятка носит информационный характер. Всегда следуйте индивидуальным рекомендациям вашего лечащего врача.</div>
     <div class="pad" style="display:grid;gap:12px">
       ${PREP_FOR[o.id] ? `<a class="btn grad-night" href="#/prep/${PREP_FOR[o.id]}">📋 Как подготовиться к операции</a>` : ''}
-      <button class="btn grad-night" data-start="${o.id}">${svg('heart', 22)} Мне сегодня сделали эту операцию — включить «Мой путь»</button>
+      <button class="btn grad-night" data-start="${o.id}">${svg('heart', 22)} ${o.section && o.section !== 'Surgery' ? 'Мне сегодня это сделали' : 'Мне сегодня сделали эту операцию'} — включить «Мой путь»</button>
       <button class="btn grad-teal" data-share="#/guide/${o.id}" data-title="Памятка: ${esc(o.title)}">${svg('share', 22)} Поделиться памяткой</button>
     </div><div style="height:40px"></div></main>`;
 }
@@ -243,7 +253,8 @@ function careBlock(o) {
   const c = o.care || [], d = o.dates || [];
   return `<div class="pad" style="display:grid;gap:12px;margin-top:4px">
     ${c.length ? `<div class="box pale enter"><h3>💊 Уход и лекарства</h3><p class="small muted" style="margin:2px 0 6px">По памятке клиники «Авалон». Препараты — только те, что назначил ваш врач.</p>${c.map(x => `<div class="bullet" style="--c:var(--teal)">${esc(x)}</div>`).join('')}</div>` : ''}
-    ${d.length ? `<div class="box sun enter" style="--i:1"><h3>📅 Важные сроки</h3>${d.map(x => `<div class="bullet" style="--c:var(--sun)">${esc(x)}</div>`).join('')}</div>` : ''}</div>`;
+    ${d.length ? `<div class="box sun enter" style="--i:1"><h3>📅 Важные сроки</h3>${d.map(x => `<div class="bullet" style="--c:var(--sun)">${esc(x)}</div>`).join('')}</div>` : ''}
+    ${(o.prevention || []).length ? `<div class="box mint enter" style="--i:2"><h3>🛡 Профилактика</h3>${o.prevention.map(x => `<div class="bullet" style="--c:var(--mint)">${esc(x)}</div>`).join('')}</div>` : ''}</div>`;
 }
 function alarm(normal, red) {
   return `<div class="pad" style="display:grid;gap:12px;margin-top:8px">
@@ -274,8 +285,8 @@ function viewTracker() {
   if (!o) {
     const sel = window._sel || {};
     return header(`<div class="row"><div style="flex:1"><h1>Мой путь</h1><p>Персональный план восстановления по дням: чек-лист, этапы и самопроверка</p></div>${art('Calendar', 110, 'white')}</div>`, 'night') +
-    `<main class="wrap">${section('1. Какая у вас операция?')}
-      <div class="grid pad" style="--cols:1;--cols-m:2;--cols-l:2">${D.operations.map((x, i) => `
+    `<main class="wrap">${section('1. Что вам сделали?')}${secChips()}
+      <div class="grid pad" style="--cols:1;--cols-m:2;--cols-l:2">${opsIn(SEC).map((x, i) => `
         <button class="card flat enter" style="--i:${i};display:flex;align-items:center;gap:12px;padding:10px;text-align:left;border:2px solid ${sel.op === x.id ? 'var(--teal)' : 'transparent'};background:${sel.op === x.id ? 'var(--pale)' : 'var(--card)'}" data-pick="${x.id}">
           ${art(x.art, 52)}<div style="flex:1"><b>${esc(x.title)}</b><div class="small muted">${esc(x.subtitle)}</div></div>${sel.op === x.id ? '<span class="pill mint">✓</span>' : ''}</button>`).join('')}</div>
       ${section('2. Когда была операция?')}
@@ -693,7 +704,8 @@ function speechFor(id) {
     const o = byId(D.operations, a); const t = +b; out.push(o.title + '.');
     if (t === 0) { out.push('Этапы восстановления.'); o.stages.forEach((st, i) => { out.push(`Этап ${i + 1}. ${st.period}. ${st.title}. ${st.whatHappens}`); if (st.tasks.length) out.push('Что делать: ' + sayList(st.tasks)); });
       if ((o.care || []).length) out.push('Уход и лекарства. Препараты — только те, что назначил ваш врач. ' + sayList(o.care));
-      if ((o.dates || []).length) out.push('Важные сроки: ' + sayList(o.dates)); }
+      if ((o.dates || []).length) out.push('Важные сроки: ' + sayList(o.dates));
+      if ((o.prevention || []).length) out.push('Профилактика: ' + sayList(o.prevention)); }
     else if (t === 1 || t === 2) { out.push(t === 1 ? 'Что можно и нужно делать.' : 'Чего делать нельзя.'); (t === 1 ? o.dos : o.donts).forEach(x => out.push(`${x.title}. ${x.short.replace(/\.$/, '')}. ${x.details}`)); }
     else if (t === 3) out.push('Питание. Можно есть: ' + sayList(o.foodYes), 'Лучше исключить: ' + sayList(o.foodNo), 'Еда — тёплая, не горячая. Жуйте на здоровой стороне.');
     else out.push('Это нормально: ' + sayList(o.normal), 'Срочно позвоните врачу, если: ' + sayList(o.redFlags), 'Телефон клиники: 8 812 501 75 01.');
@@ -869,6 +881,7 @@ function route() {
   if (!r) initHero();
   if (r === 'tracker' && document.getElementById('symptoms')) updateVerdict();
   if (r === 'booking') refreshSend();
+  document.querySelectorAll('.secchips').forEach(row => { const on = row.querySelector('.secchip.on'); if (on) row.scrollLeft = on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2; });
   if (r !== 'howto') HT.auto = false;
   if (r === 'howto' && a) startHowTo(a, Math.max(0, +b || 0));
   document.querySelectorAll('[data-count]').forEach(el => { const n = +el.dataset.count; let k = 0; const t = setInterval(() => { k++; el.textContent = Math.round(n * Math.min(1, k / 30)); if (k >= 30) clearInterval(t); }, 40); timers.push(t); });
@@ -878,9 +891,10 @@ function route() {
 
 // ————————————————— События —————————————————
 document.addEventListener('click', e => {
-  const el = e.target.closest('[data-htauto],[data-httimer],[data-htreset],[data-listen],[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
+  const el = e.target.closest('[data-sec],[data-htauto],[data-httimer],[data-htreset],[data-listen],[data-install],[data-prep],[data-bk],[data-bksend],[data-copybooking],[data-href],[data-nav],[data-back],[data-tip],[data-toggle-stage],[data-start],[data-share],[data-pick],[data-begin],[data-reset],[data-resetquiz],[data-task],[data-set],[data-toggle],[data-ans],[data-next],[data-quiz-restart],[data-flip]');
   if (!el) return;
   const d = el.dataset;
+  if (d.sec) { SEC = d.sec; window._replace = true; route(); return; }
   if (d.htauto !== undefined) { HT.auto = !HT.auto; const m = location.hash.match(/^#\/howto\/([^/]+)\/?(\d*)/); if (HT.auto && m) { const h = D.howtos.find(x => x.id === m[1]); if (h && +m[2] >= h.steps.length - 1) { history.replaceState(null, '', `#/howto/${m[1]}/0`); } } window._replace = true; route(); return; }
   if (d.httimer !== undefined) { const t = document.getElementById('httimer'); tickTimer(!t._iv); return; }
   if (d.htreset !== undefined) { const t = document.getElementById('httimer'); t.dataset.left = t.dataset.total; tickTimer(false); return; }

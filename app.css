@@ -366,3 +366,11 @@ input[type=text], input[type=date] { width: 100%; padding: 14px; border-radius: 
 .htstep.on { background: var(--pale); }
 .htstep .num { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: var(--pale); color: var(--teal-deep); }
 .htstep.on .num { background: var(--teal); color: #fff; }
+
+/* Разделы памяток */
+.secchips { padding-top: 2px; padding-bottom: 8px; }
+.secchip { flex: none; display: flex; align-items: center; gap: 6px; padding: 4px 14px 4px 6px; border-radius: 99px; background: var(--card); border: 1px solid var(--outline); color: var(--ink); font-size: .9rem; scroll-snap-align: start; transition: background .3s; }
+.secchip .art { --s: 30px; }
+.secchip span { color: var(--muted); font-size: .8rem; }
+.secchip.on { background: var(--teal); border-color: transparent; color: #fff; }
+.secchip.on span { color: rgba(255,255,255,.8); }
