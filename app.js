@@ -213,7 +213,7 @@ function viewGuide(id, tab = 0) {
     body = `<div class="hint">👆 Нажмите на этап, чтобы увидеть, что делать</div><div class="pad">${o.stages.map((s, i) => `
       <div class="stage ${i === 0 ? 'open' : ''} enter" style="--i:${i}"><div class="num"><b>${i + 1}</b>${i < o.stages.length - 1 ? '<i></i>' : ''}</div>
         <div class="card" data-toggle-stage><div class="period">${esc(s.period)}</div><b>${esc(s.title)}</b>
-          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o) + howToRow((D.howtos || []).filter(h => h.ops.includes(o.id)), 'Как правильно', 'Посмотрите по шагам, как это делать');
+          <div class="more"><div><p class="muted" style="margin:8px 0">${esc(s.whatHappens)}</p>${s.tasks.map(t => `<div class="check">${esc(t)}</div>`).join('')}</div></div></div></div>`).join('')}</div>` + careBlock(o) + ((hs) => howToRow(hs, 'Как правильно', `Для этой операции — ${hs.length} из ${D.howtos.length}. Все инструкции — по кнопке «Все»`))((D.howtos || []).filter(h => h.ops.includes(o.id)));
   } else if (tab === 1 || tab === 2) {
     const good = tab === 1; const list = good ? o.dos : o.donts;
     body = `<div class="hint">👆 Нажмите на картинку — расскажу подробнее</div><div class="grid pad" style="--cols:2;--cols-m:3;--cols-l:4">${list.map((t, i) => `
@@ -564,7 +564,7 @@ function howToCard(h, i = 0) {
 }
 function howToRow(list, title = 'Как правильно', sub = 'Анимированные пошаговые инструкции с озвучкой') {
   if (!list.length) return '';
-  return section(title, list.length === (D.howtos || []).length ? '#/howto' : null) + (sub ? `<p class="small muted wrap" style="padding:0 16px">${sub}</p>` : '') +
+  return section(title, '#/howto', `Все ${(D.howtos || []).length}`) + (sub ? `<p class="small muted wrap" style="padding:0 16px">${sub}</p>` : '') +
     `<div class="hrow">${list.map(howToCard).join('')}</div>`;
 }
 function viewHowTos() {
