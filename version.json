@@ -1,6 +1,6 @@
 {
- "versionCode": 18,
- "versionName": "1.17",
- "apk": "apk/Avalon-Patient-1.17.apk",
- "notes": "Новая инструкция: как фиксировать съёмный протез кремом"
+ "versionCode": 19,
+ "versionName": "1.18",
+ "apk": "apk/Avalon-Patient-1.18.apk",
+ "notes": "Детализированные рисунки: объёмные зубы, дёсны, лицо и руки; плавнее анимации на сайте"
 }
