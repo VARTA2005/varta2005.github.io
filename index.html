@@ -17,7 +17,7 @@
   <link rel="icon" href="img/icon-192.png">
   <link rel="apple-touch-icon" href="img/icon-192.png">
   <script>/* Телевизоры (LG webOS и др.): у них старый браузер — открываем версию для пульта */
-    if (/Web0S|webOS|SmartTV|SMART-TV|NetCast|HbbTV|VIDAA|BRAVIA/i.test(navigator.userAgent) && location.search.indexOf('full') < 0) location.replace('tv.html');</script>
+    if (/Web0S|webOS|SmartTV|SMART-TV|NetCast|HbbTV|VIDAA|BRAVIA/i.test(navigator.userAgent) && location.search.indexOf('full') < 0) location.replace('tv.html' + location.hash);</script>
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
