@@ -22,7 +22,7 @@
   var HOW = APP ? 'выберите стрелками пульта и нажмите OK' : 'наведите курсор стрелками пульта и нажмите OK';
 
   // ———————————— Настройки (хранятся в телевизоре) ————————————
-  var S = { size: 1, anim: APP ? 'all' : 'focus', clinic: true, idleMin: 3, slideSec: 12, track: null, checked: {}, quizBest: 0, prep: {} };
+  var S = { size: 1, anim: APP ? 'all' : 'focus', clinic: true, idleMin: 3, slideSec: 12, music: true, vol: 0.3, track: null, checked: {}, quizBest: 0, prep: {} };
   try { var saved = JSON.parse(localStorage.getItem('avalon-tv') || '{}'); for (var sk in saved) if (saved.hasOwnProperty(sk)) S[sk] = saved[sk]; } catch (e) {}
   function save() { try { localStorage.setItem('avalon-tv', JSON.stringify(S)); } catch (e) {} }
   function resetPatient() { S.track = null; S.checked = {}; S.prep = {}; Q = { i: 0, score: 0, answered: null }; SEL = { op: null, back: 0 }; save(); }
@@ -81,6 +81,7 @@
     bulb: 'M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z',
     star: 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z',
     qr: 'M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 4h3v2h-3zm-5-6h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm2 2h2v2h-2zm2-4h2v2h-2zm0 4h2v2h-2zm2-2h3v2h-3z',
+    note: 'M12 3v10.55A4 4 0 1014 17V7h4V3h-6z',
     vol: 'M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z',
     up: 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z',
     down: 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z',
@@ -183,14 +184,40 @@
     var u = new window.SpeechSynthesisUtterance(speechFor(id) + ' Следуйте рекомендациям вашего лечащего врача.');
     u.lang = 'ru-RU'; var vs = TTS.getVoices ? TTS.getVoices() : [];
     var v = find(vs, function (x) { return /^ru/i.test(x.lang); }); if (v) u.voice = v;
-    u.onend = function () { SAY.id = null; refreshSay(); };
-    SAY.id = id; TTS.speak(u); refreshSay();
+    u.onend = function () { SAY.id = null; refreshSay(); if (S.music) musicFade(musicTarget()); };
+    SAY.id = id; TTS.speak(u); refreshSay(); if (S.music) musicFade(musicTarget());
   }
   function stopSpeech() { if (TTS && SAY.id) { TTS.cancel(); SAY.id = null; } }
   function refreshSay() {
     var bs = qa('[data-say]');
     for (var i = 0; i < bs.length; i++) { var on = bs[i].getAttribute('data-say') === SAY.id; bs[i].className = bs[i].className.replace(/ on\b/, '') + (on ? ' on' : ''); bs[i].innerHTML = ic(on ? 'pause' : 'vol') + (on ? 'Стоп' : 'Слушать'); }
   }
+
+  // ———————————— Фоновая музыка (спокойные мелодии сочинены программой web/tools/make_music.py) ————————————
+  var MUSIC = [['tv/music/calm-1.mp3', 'Утро'], ['tv/music/calm-2.mp3', 'Тишина'], ['tv/music/calm-3.mp3', 'Море']];
+  var MU = { el: null, i: 0, fade: null };
+  function musicTarget() { return S.vol * (TTS && SAY.id ? 0.25 : 1); } // во время чтения вслух музыка тише
+  function musicFade(to, done) {
+    if (!MU.el) return; clearInterval(MU.fade);
+    MU.fade = setInterval(function () {
+      var v = MU.el.volume, d = to - v, st = 0.03;
+      if (Math.abs(d) <= st) { MU.el.volume = Math.max(0, Math.min(1, to)); clearInterval(MU.fade); if (done) done(); }
+      else MU.el.volume = Math.max(0, Math.min(1, v + (d > 0 ? st : -st)));
+    }, 80);
+  }
+  function musicPlay() {
+    if (!MU.el) {
+      try { MU.el = new Audio(); } catch (e) { return; }
+      MU.el.preload = 'auto'; MU.el.volume = 0;
+      MU.el.addEventListener('ended', function () { MU.i = (MU.i + 1) % MUSIC.length; MU.el.src = MUSIC[MU.i][0]; tryPlay(); });
+      MU.i = new Date().getHours() % MUSIC.length; MU.el.src = MUSIC[MU.i][0];
+    }
+    if (MU.el.paused) tryPlay();
+    musicFade(musicTarget());
+  }
+  function tryPlay() { try { var pr = MU.el.play(); if (pr && pr['catch']) pr['catch'](function () {}); } catch (e) {} }
+  function musicApply() { if (S.music) musicPlay(); else if (MU.el && !MU.el.paused) musicFade(0, function () { MU.el.pause(); }); }
+  function musicNext() { if (!MU.el) return musicPlay(); MU.i = (MU.i + 1) % MUSIC.length; MU.el.src = MUSIC[MU.i][0]; MU.el.volume = 0; tryPlay(); musicFade(musicTarget()); }
 
   // ———————————— QR-код (только в приложении) ————————————
   function qrSvg(url) {
@@ -645,12 +672,14 @@
     function opt(key, val, label) { return '<a class="f chipbtn' + (S[key] === val ? ' on' : '') + '" href="#" data-set="' + key + ':' + val + '">' + label + '</a>'; }
     var html = head('Настройки', 'Настройки экрана', '<p>Всё сохраняется в телевизоре</p>', '<span class="mic xl">' + ic('gear') + '</span>', 'lilac slim') +
       box('Размер текста', '<div class="chiprow">' + opt('size', 1, 'Обычный') + opt('size', 1.12, 'Крупный') + opt('size', 1.25, 'Очень крупный') + '</div>', '', ' data-main="1"') +
+      box('Музыка на фоне', '<p class="muted">Спокойная расслабляющая музыка без слов играет всё время' + (MU.el && !MU.el.paused ? ' · сейчас: «' + MUSIC[MU.i][1] + '»' : '') + '</p><div class="chiprow">' + opt('music', true, 'Включена') + opt('music', false, 'Выключена') + '</div>' +
+        '<p class="muted">Громкость:</p><div class="chiprow">' + opt('vol', 0.15, 'Очень тихо') + opt('vol', 0.3, 'Тихо') + opt('vol', 0.5, 'Средне') + opt('vol', 0.8, 'Громко') + actBtn('mnext', ic('next') + 'Другая мелодия', 'ghost') + '</div>') +
       box('Анимации', '<p class="muted">Если телевизор работает медленно — выберите «Только выбранное» или «Выключить»</p><div class="chiprow">' + opt('anim', 'all', 'Все') + opt('anim', 'focus', 'Только выбранное') + opt('anim', 'off', 'Выключить') + '</div>') +
       box('Режим «Телевизор в клинике»', '<p class="muted">Если пультом не пользуются, через несколько минут на весь экран по кругу показываются все памятки и рекомендации по хирургии, подготовке к операции и наркозу. В режиме клиники данные пациента («Мой путь», отметки, викторина) при этом стираются, и следующий пациент начинает с главной.</p>' +
         '<div class="chiprow">' + opt('clinic', true, 'Включён') + opt('clinic', false, 'Выключен') + '</div><p class="muted">Показ инструкций через:</p><div class="chiprow">' + opt('idleMin', 2, '2 мин') + opt('idleMin', 3, '3 мин') + opt('idleMin', 5, '5 мин') + opt('idleMin', 10, '10 мин') + opt('idleMin', 0, 'Никогда') + '</div>' +
         '<p class="muted">Смена кадров заставки (все памятки по хирургии, подготовке и наркозу) — каждые:</p><div class="chiprow">' + opt('slideSec', 6, '6 сек') + opt('slideSec', 8, '8 сек') + opt('slideSec', 12, '12 сек') + opt('slideSec', 15, '15 сек') + opt('slideSec', 20, '20 сек') + opt('slideSec', 30, '30 сек') + '</div>') +
       box('Данные пациента', '<div class="chiprow">' + actBtn('wipe', ic('replay') + 'Стереть «Мой путь» и отметки', 'ghost') + actBtn('idle', ic('play') + 'Показать заставку сейчас', 'ghost') + '</div>') +
-      '<p class="disc">«Авалон · Помощник пациента» для телевизора' + (APP ? ' · приложение' : ' · сайт') + (TTS ? ' · чтение вслух доступно' : '') + '</p>';
+      '<p class="disc">Музыка сочинена специально для приложения, без чужих авторских прав · «Авалон · Помощник пациента» для телевизора' + (APP ? ' · приложение' : ' · сайт') + (TTS ? ' · чтение вслух доступно' : '') + '</p>';
     return { title: 'Настройки', html: html };
   }
 
@@ -663,7 +692,7 @@
       '<img class="tlogo" src="img/logo-white.svg" alt="Авалон"><nav class="tnav">' + map(NAV, function (n) {
         var on = n[3] ? has(n[3].split(' '), r) : !r;
         return '<a class="f tbtn' + (on ? ' on' : '') + (n[1] ? '' : ' icon') + '" href="' + n[2] + '">' + ic(n[0]) + (n[1] ? '<span>' + n[1] + '</span>' : '') + '</a>';
-      }) + '</nav><span class="clock" id="clock">' + clock() + '</span></header>';
+      }) + '</nav>' + (S.music ? '<a class="f tbtn icon" href="#/settings" title="Музыка">' + ic('note') + '</a>' : '') + '<span class="clock" id="clock">' + clock() + '</span></header>';
   }
   function foot() {
     return '<footer class="foot"><span><i class="key">' + ic('dpad') + '</i> ' + (APP ? 'выбор' : 'курсор') + '</span><span><i class="key">OK</i> открыть</span><span><i class="key">Назад</i> вернуться</span>' +
@@ -824,6 +853,7 @@
 
   document.addEventListener('keydown', function (e) {
     lastInput = now();
+    if (S.music && D && (!MU.el || MU.el.paused)) musicPlay();
     if (idleOn) { stopIdle(); e.preventDefault(); return; }
     var k = e.keyCode;
     var dir = k === 37 ? 'l' : k === 38 ? 'u' : k === 39 ? 'r' : k === 40 ? 'd' : null;
@@ -841,6 +871,7 @@
 
   document.addEventListener('click', function (e) {
     lastInput = now();
+    if (S.music && D && (!MU.el || MU.el.paused)) musicPlay();
     var el = closest(e.target, '[data-act],[data-rep],[data-tip],[data-pick],[data-back],[data-task],[data-sym],[data-prep],[data-ans],[data-flip],[data-set],[data-say],.slide');
     if (!el) return;
     if (matches(el, '.slide')) { e.preventDefault(); location.hash = el.getAttribute('data-href'); return; }
@@ -858,7 +889,7 @@
     if (g('data-flip')) { el.className = el.className.indexOf(' on') >= 0 ? el.className.replace(' on', '') : el.className + ' on'; return; }
     if (g('data-set')) {
       var sv = g('data-set').split(':'), val = sv[1] === 'true' ? true : sv[1] === 'false' ? false : isNaN(+sv[1]) ? sv[1] : +sv[1];
-      S[sv[0]] = val; save(); fit(); pendingFocus = '[data-set="' + g('data-set') + '"]'; render(); return;
+      S[sv[0]] = val; save(); fit(); musicApply(); pendingFocus = '[data-set="' + g('data-set') + '"]'; render(); return;
     }
     var act = g('data-act');
     if (act === 'back') goBack();
@@ -875,6 +906,7 @@
     else if (act === 'qrestart') { Q = { i: 0, score: 0, answered: null }; pendingFocus = '[data-ans="0"]'; render(); }
     else if (act === 'wipe') { resetPatient(); pendingFocus = '[data-act=wipe]'; render(); }
     else if (act === 'idle') startIdle();
+    else if (act === 'mnext') { musicNext(); later(function () { pendingFocus = '[data-act=mnext]'; render(); }, 300); }
   });
   // перерисовать экран, оставив выбранным тот же элемент и место прокрутки
   function rerender(el) {
@@ -991,7 +1023,7 @@
     x.open('GET', 'data.json', true);
     x.onload = function () {
       try { D = JSON.parse(x.responseText); } catch (err) { D = null; }
-      if (D) render(); else retry(tries);
+      if (D) { render(); musicApply(); } else retry(tries);
     };
     x.onerror = function () { retry(tries); };
     x.send();
