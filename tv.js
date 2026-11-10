@@ -14,6 +14,9 @@
   var lastInput = new Date().getTime();
   var IDLE_MS = 3 * 60 * 1000; // через 3 минуты без пульта — показ инструкций по кругу
   var HT = { auto: false };
+  // Приложение для webOS (папка tvapp/): там пульт отдаёт стрелки странице. В браузере ТВ стрелки двигают курсор.
+  var APP = !!window.PalmSystem || location.protocol === 'file:';
+  var HOW = APP ? 'выберите раздел стрелками пульта и нажмите OK' : 'наведите курсор стрелками пульта и нажмите OK';
 
   // ———————————— Масштаб: интерфейс рассчитан на 1280×720 и растягивается под экран ————————————
   function fit() {
@@ -108,7 +111,7 @@
     var hts = D.howtos || [];
     return {
       title: '',
-      html: '<section class="hero"><div><h1>Помощник пациента</h1><p>Памятки и рекомендации клиники «Авалон» — наведите курсор стрелками пульта и нажмите OK</p></div></section>' +
+      html: '<section class="hero"><div><h1>Помощник пациента</h1><p>Памятки и рекомендации клиники «Авалон» — ' + HOW + '</p></div></section>' +
         '<h2 class="h">Памятки после лечения</h2><div class="grid g6 hm">' + map(secs, function (s, i) {
           var n = opsIn(s.id).length;
           return tile('#/guides/' + s.id, art(s.art, 'm'), esc(s.title), esc(s.short), '<span class="pill">' + n + ' ' + plural(n, 'памятка', 'памятки', 'памяток') + '</span>', i === 0 ? '" data-main="1' : '');
@@ -306,7 +309,7 @@
       '<span class="tright">' + ic('phone') + esc(D.clinic.phone) + '<span class="clock" id="clock">' + clock() + '</span></span></header>';
   }
   // На обычном пульте LG стрелки в браузере двигают курсор (сайт их не получает) — поэтому крупные кнопки «Выше/Ниже»
-  var FOOT = '<footer class="foot"><span><i class="key">' + ic('dpad') + '</i> стрелки — курсор</span><span><i class="key">OK</i> открыть</span><span><i class="key">Назад</i> вернуться</span>' +
+  var FOOT = '<footer class="foot"><span><i class="key">' + ic('dpad') + '</i> стрелки — ' + (APP ? 'выбор' : 'курсор') + '</span><span><i class="key">OK</i> открыть</span><span><i class="key">Назад</i> вернуться</span>' +
     '<span class="scrollbtns"><a class="sbtn" href="#" data-act="up" id="sup">' + ic('up') + 'Выше</a><a class="sbtn" href="#" data-act="down" id="sdown">' + ic('down') + 'Ниже</a></span></footer>';
 
   function parts() { return location.hash.replace(/^#\/?/, '').split('/'); }
@@ -440,6 +443,9 @@
   document.addEventListener('mousemove', function () { lastInput = now(); if (idleOn) stopIdle(); });
   document.addEventListener('wheel', function () { lastInput = now(); });
   window.addEventListener('hashchange', render);
+  // приложение на webOS: не даём телевизору включать свою заставку — у нас своя (инструкции по кругу)
+  document.addEventListener('webOSScreenSaverRequest', function (e) { if (e.preventDefault) e.preventDefault(); });
+  document.addEventListener('screenSaverRequest', function (e) { if (e.preventDefault) e.preventDefault(); });
   // кнопки «Выше/Ниже» видны, только когда есть куда листать
   function scrollBtns() {
     var u = document.getElementById('sup'), d = document.getElementById('sdown'); if (!u || !d) return;
@@ -458,7 +464,7 @@
         var st = hts[i].steps[j];
         slides.push({ img: 'tv/g/' + st.scene + '.gif', kick: 'Как правильно · ' + hts[i].title, n: 'Шаг ' + (j + 1) + ' из ' + hts[i].steps.length, title: st.title, text: st.text });
       }
-      if (i % 3 === 2) slides.push({ img: still('Tooth'), kick: 'Помощник пациента', n: '', title: 'Памятки после лечения — на этом экране', text: 'Возьмите пульт: стрелками наведите курсор на раздел и нажмите OK. Хирургия, терапия, ортопедия, гигиена, пародонтология и ортодонтия.' });
+      if (i % 3 === 2) slides.push({ img: still('Tooth'), kick: 'Помощник пациента', n: '', title: 'Памятки после лечения — на этом экране', text: 'Возьмите пульт: ' + HOW + '. Хирургия, терапия, ортопедия, гигиена, пародонтология и ортодонтия.' });
     }
   }
   function showSlide() {
