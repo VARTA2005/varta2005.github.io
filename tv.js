@@ -103,9 +103,11 @@
     var bg = white ? 'rgba(255,255,255,.16)' : cls && cls.indexOf('nohalo') >= 0 ? 'transparent' : rgba(tint, 0.13);
     var sp = SPR[name], inner;
     if (sp && sp[0] > 1 && S.anim !== 'off') {
-      var st = 'background-image:url(tv/s/' + name + '.png);background-size:' + (sp[0] * 100) + '% 100%;-webkit-animation-duration:' + sp[1] + 'ms;animation-duration:' + sp[1] +
-        'ms;-webkit-animation-timing-function:steps(' + (sp[0] - 1) + ');animation-timing-function:steps(' + (sp[0] - 1) + ')';
-      inner = '<i class="spr" style="' + st + '"></i>';
+      // «плёнка» кадров едет шагами через transform — это делает видеокарта, процессор не перерисовывает картинку.
+      // Неподвижный первый кадр виден всегда; анимация включается только у видимых на экране значков (класс run).
+      var n = sp[0], st = 'width:' + (n * 100) + '%;-webkit-animation-duration:' + sp[1] + 'ms;animation-duration:' + sp[1] +
+        'ms;-webkit-animation-timing-function:steps(' + n + ');animation-timing-function:steps(' + n + ')';
+      inner = '<i class="rail" style="' + st + '"><img src="tv/s/' + name + '.png" alt=""></i>';
     } else if (D.arts && D.arts[name]) inner = '<img src="' + still(name) + '" alt="">';
     else inner = '<img class="cover" src="' + still(name) + '" alt="">';
     return '<span class="art ' + (cls || '') + '" style="background:' + bg + '">' + inner + '</span>';
@@ -729,19 +731,16 @@
       case 'settings': v = viewSettings(); break;
       default: v = viewHome(); r = '';
     }
-    app.innerHTML = topbar(r) + '<main id="main" class="pg">' + v.html + '<div class="endpad"></div></main>' + foot();
+    app.innerHTML = topbar(r) + '<main id="main"><div id="sc" class="sc pg">' + v.html + '<div class="endpad"></div></div></main>' + foot();
     document.title = (v.title ? v.title + ' · ' : '') + 'Авалон · Помощник пациента';
     var fs = qa('.f'); for (var i = 0; i < fs.length; i++) fs[i].setAttribute('data-k', i);
     var t = null;
     if (pendingFocus) { t = q(pendingFocus); pendingFocus = null; }
     if (!t && memo[location.hash] != null) t = fs[memo[location.hash]];
     if (!t) t = q('#main [data-main]') || q('#main .f') || fs[0];
-    window.scrollTo(0, 0); setY(0); scrollY0 = 0;
-    if (t) {
-      focusEl(t, true);
-      if (rect(t).top + getY() < window.innerHeight - bars().bottom - 60) jump(0);
-    }
-    later(scrollBtns, 60);
+    jump(0);
+    if (t) { focusEl(t, true); if (ctop(t).b > viewH() - 60) jump(ctop(t).t - 16); }
+    later(afterScroll, 60);
     every(rotTick, 1700);
     if (!r && S.anim !== 'off') every(function () { if (!idleOn) heroGo(1); }, 7000);
     if (r === 'howto' && a && document.getElementById('timer')) tickTimer(false);
@@ -754,54 +753,64 @@
     var rs = qa('.rot[data-items]');
     for (var i = 0; i < rs.length; i++) {
       if (i % 2 !== rotPhase) continue;
-      var el = rs[i], items; try { items = JSON.parse(el.getAttribute('data-items')); } catch (e) { continue; }
+      var el = rs[i], items; if (!onScreen(el)) continue; try { items = JSON.parse(el.getAttribute('data-items')); } catch (e) { continue; }
       var k = ((+el.getAttribute('data-k2') || 0) + 1) % items.length; el.setAttribute('data-k2', k);
       el.innerHTML = '<span class="in">' + esc(items[k]) + '</span>';
     }
   }
 
   // ———————————— Пульт: перемещение стрелками ————————————
-  var scrollY0 = 0, scrollAnim = null;
+  var scrollAnim = null;
   function rect(el) { return el.getBoundingClientRect(); }
   function bars() { var t = q('.top'), f = q('.foot'); return { top: t ? t.offsetHeight : 0, bottom: f ? f.offsetHeight : 0 }; }
-  // Прокручивается не вся страница, а область #main между верхним меню и подсказками: в приложениях webOS
-  // прокрутка всей страницы запрещена (на ТВ выбор уходил вниз, а экран стоял на месте).
-  function SC() { return document.getElementById('main'); }
-  function getY() { var m = SC(); return m ? m.scrollTop : 0; }
-  function setY(y) { var m = SC(); if (m) m.scrollTop = y; }
-  function maxY() { var m = SC(); return m ? Math.max(0, m.scrollHeight - m.clientHeight) : 0; }
-  function jump(y) { if (scrollAnim) { cancelAnimationFrame(scrollAnim); scrollAnim = null; } scrollY0 = Math.max(0, Math.min(maxY(), y)); setY(scrollY0); }
-  // плавная прокрутка (на слабом ТВ — без анимации)
-  function scrollToY(y) {
-    y = Math.max(0, Math.min(maxY(), Math.round(y)));
-    if (S.anim === 'off' || !window.requestAnimationFrame) { jump(y); return; }
-    if (scrollAnim) cancelAnimationFrame(scrollAnim);
-    var from = getY(), t0 = now(); scrollY0 = y;
-    function step() {
-      var k = Math.min(1, (now() - t0) / 200), e = 1 - Math.pow(1 - k, 3);
-      setY(Math.round(from + (y - from) * e));
-      scrollAnim = k < 1 ? requestAnimationFrame(step) : null;
-      if (!scrollAnim) scrollBtns();
-    }
-    scrollAnim = requestAnimationFrame(step);
+  // Прокрутка. Страница целиком в приложениях webOS не прокручивается, а прокрутка блока на слабом ТВ перерисовывает
+  // весь экран (рывки). Поэтому содержимое лежит в «каретке» #sc и сдвигается transform: translate3d — это делает
+  // видеокарта, плавно и без нагрузки на процессор. Y — текущий сдвиг.
+  var Y = 0;
+  function SC() { return document.getElementById('sc'); }
+  function MN() { return document.getElementById('main'); }
+  function viewH() { var m = MN(); return m ? m.clientHeight : 600; }
+  function getY() { return Y; }
+  function maxY() { var c = SC(); return c ? Math.max(0, c.offsetHeight - viewH()) : 0; }
+  function setY(y, instant) {
+    var c = SC(); Y = Math.max(0, Math.min(maxY(), Math.round(y)));
+    if (!c) return;
+    var tr = 'translate3d(0,' + (-Y) + 'px,0)';
+    if (instant || S.anim === 'off') { c.className = c.className.replace(/ nt\b/g, '') + ' nt'; c.style.webkitTransform = tr; c.style.transform = tr; void c.offsetHeight; c.className = c.className.replace(/ nt\b/g, ''); }
+    else { c.style.webkitTransform = tr; c.style.transform = tr; }
+    clearTimeout(scrollAnim); scrollAnim = setTimeout(afterScroll, 280);
   }
-  function base() { return scrollAnim ? scrollY0 : getY(); }
+  function jump(y) { setY(y, true); }
+  function scrollToY(y) { setY(y); }
+  function base() { return Y; }
+  // положение элемента внутри «каретки» (не зависит от того, докрутилась ли анимация)
+  function ctop(el) { var c = SC(), r = rect(el), cr = c ? rect(c) : { top: 0 }; return { t: r.top - cr.top, b: r.bottom - cr.top }; }
+  function inSc(el) { var c = SC(); return !!c && c.contains(el); }
+  function onScreen(el) { if (!inSc(el)) return true; var p = ctop(el); return p.b > Y - 40 && p.t < Y + viewH() + 40; }
   function ensureVisible(el) {
-    if (closest(el, '.top') || closest(el, '#sheet')) return;
-    var b = bars(), pad = 16, r = rect(el), vh = window.innerHeight, y = getY(), bs = base();
-    var top = r.top + y, bot = r.bottom + y;
-    if (bot < vh - b.bottom - pad) { scrollToY(0); return; }
-    if (top < bs + b.top + pad) scrollToY(top - b.top - pad);
-    else if (bot > bs + vh - b.bottom - pad) scrollToY(bs + Math.min(bot - (bs + vh - b.bottom - pad), top - (bs + b.top + pad)));
+    if (!inSc(el)) return;
+    var p = ctop(el), pad = 16, h = viewH();
+    if (p.b < h - pad) { scrollToY(0); return; }
+    if (p.t < Y + pad) scrollToY(p.t - pad);
+    else if (p.b > Y + h - pad) scrollToY(Y + Math.min(p.b - (Y + h - pad), p.t - (Y + pad)));
+  }
+  // после прокрутки: анимации только у видимых значков, кнопки «Выше/Ниже»
+  function afterScroll() {
+    scrollAnim = null; scrollBtns();
+    if (S.anim !== 'all') return;
+    var as = qa('#sc .art'), h = viewH();
+    for (var i = 0; i < as.length; i++) {
+      var p = ctop(as[i]), vis = p.b > Y && p.t < Y + h, on = as[i].className.indexOf(' run') >= 0;
+      if (vis && !on) as[i].className += ' run'; else if (!vis && on) as[i].className = as[i].className.replace(' run', '');
+    }
   }
   function focusEl(el, noScroll) {
-    var y = getY();
     try { el.focus(); } catch (e) {}
-    setY(y); window.scrollTo(0, 0); // браузер сам прокручивает рывком — возвращаем и прокручиваем аккуратно
+    var m = MN(); if (m) m.scrollTop = 0; window.scrollTo(0, 0); // браузер сам «докручивает» к выбранному — отменяем, двигаем сами
     if (!noScroll) ensureVisible(el);
   }
   function visible(el) { return el.offsetWidth > 0 && el.offsetHeight > 0; }
-  function page(dir) { var b = bars(), vh = window.innerHeight; scrollToY(base() + dir * Math.round((vh - b.top - b.bottom) * 0.55)); }
+  function page(dir) { scrollToY(Y + dir * Math.round(viewH() * 0.55)); }
   function move(dir) {
     var sheet = document.getElementById('sheet');
     var all = qa(sheet ? '#sheet .f' : '.f');
@@ -811,8 +820,11 @@
     var c = rect(cur), b = bars(), vh = window.innerHeight;
     var inTop = !!closest(cur, '.top');
     // высокий блок (длинный текст): сначала докручиваем его, потом переходим дальше
-    if (!inTop && !sheet && dir === 'd' && c.bottom > vh - b.bottom - 8) { page(1); return; }
-    if (!inTop && !sheet && dir === 'u' && c.top < b.top - 2 && c.bottom > b.top + 40) { page(-1); return; }
+    if (!inTop && !sheet && inSc(cur)) {
+      var cp = ctop(cur);
+      if (dir === 'd' && cp.b > Y + viewH() - 8) { page(1); return; }
+      if (dir === 'u' && cp.t < Y - 2 && cp.b > Y + 40) { page(-1); return; }
+    }
     var ccx = (c.left + c.right) / 2, ccy = (c.top + c.bottom) / 2, best = null, bs = 1e12;
     for (var i = 0; i < all.length; i++) {
       var el = all[i]; if (el === cur || !visible(el)) continue;
@@ -833,7 +845,7 @@
     if (best) focusEl(best);
     else if (sheet) return;
     else if (dir === 'd') page(1);
-    else if (dir === 'u') { if (base() > 0) page(-1); else { var tb = q('.top .f.on') || q('.top .f'); if (tb) focusEl(tb); } }
+    else if (dir === 'u') { if (Y > 0) page(-1); else { var tb = q('.top .f.on') || q('.top .f'); if (tb) focusEl(tb); } }
   }
 
   function goBack() {
@@ -918,15 +930,24 @@
     var k = el.getAttribute('data-k'), y = getY();
     render();
     var t = k != null ? q('[data-k="' + k + '"]') : null;
-    jump(y); if (t) focusEl(t, true);
+    jump(y); if (t) focusEl(t, true); afterScroll();
   }
   // указка Magic Remote / мышь: наведение = выбор (без прокрутки)
   document.addEventListener('mouseover', function (e) {
     var el = closest(e.target, '.f');
-    if (el && el !== document.activeElement && !idleOn) { var y = getY(); el.focus(); setY(y); window.scrollTo(0, 0); }
+    if (el && el !== document.activeElement && !idleOn) { el.focus(); var m = MN(); if (m) m.scrollTop = 0; window.scrollTo(0, 0); }
   });
   document.addEventListener('mousemove', function () { lastInput = now(); if (idleOn) stopIdle(); });
-  document.addEventListener('wheel', function () { lastInput = now(); });
+  // колёсико указки Magic Remote / мыши — листаем сами
+  var wheelT = 0;
+  document.addEventListener('wheel', function (e) {
+    lastInput = now(); if (document.getElementById('sheet') || !MN()) return;
+    e.preventDefault(); if (now() - wheelT < 120) return; wheelT = now(); page(e.deltaY > 0 ? 0.5 : -0.5);
+  });
+  document.addEventListener('mousewheel', function (e) {
+    lastInput = now(); if (document.getElementById('sheet') || !MN()) return;
+    e.preventDefault(); if (now() - wheelT < 120) return; wheelT = now(); page((e.wheelDelta || 0) < 0 ? 0.5 : -0.5);
+  });
   window.addEventListener('hashchange', render);
   // кнопки «Выше/Ниже» видны, только когда есть куда листать
   function scrollBtns() {
@@ -934,7 +955,7 @@
     var y = getY(), mx = maxY();
     u.className = 'sbtn' + (y > 4 ? '' : ' off'); d.className = 'sbtn' + (y < mx - 4 ? '' : ' off');
   }
-  document.addEventListener('scroll', function () { if (!scrollAnim) scrollBtns(); }, true);
+  document.addEventListener('scroll', function (e) { var m = MN(); if (m && e.target === m && m.scrollTop) m.scrollTop = 0; }, true);
   // приложение на webOS: не даём телевизору включать свою заставку — у нас своя (инструкции по кругу)
   document.addEventListener('webOSScreenSaverRequest', function (e) { if (e.preventDefault) e.preventDefault(); });
   document.addEventListener('screenSaverRequest', function (e) { if (e.preventDefault) e.preventDefault(); });
