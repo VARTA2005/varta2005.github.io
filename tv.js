@@ -58,6 +58,8 @@
     alert: 'M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z',
     clock: 'M12 2a10 10 0 100 20 10 10 0 000-20zm1 11h-5v-2h3V6h2v7z',
     pin: 'M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z',
+    up: 'M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z',
+    down: 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z',
     dpad: 'M12 1l4 5H8zM12 23l-4-5h8zM1 12l5-4v8zM23 12l-5 4V8z',
     info: 'M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 100 20 10 10 0 000-20z'
   };
@@ -71,9 +73,12 @@
   function art(name, cls) {
     var tint = (D.arts && D.arts[name]) || '#579CAB';
     var bg = cls && cls.indexOf('white') >= 0 ? 'rgba(255,255,255,.16)' : rgba(tint, 0.13);
-    return '<span class="art ' + (cls || '') + '" style="background:' + bg + '"><img src="art/' + name + '_s.webp" data-a="' + name + '" alt=""></span>';
+    return '<span class="art ' + (cls || '') + '" style="background:' + bg + '"><img src="' + still(name) + '" alt=""></span>';
   }
-  function scene(name, live) { return '<img class="scene" src="art/' + name + (live ? '' : '_s') + '.webp"' + (live ? '' : ' data-a="' + name + '"') + ' alt="">'; }
+  // Картинки для ТВ лежат в tv/ (делает web/tools/build_tv.py): браузер старых ТВ не показывает WebP.
+  // Значки — PNG, сцены — JPEG; анимация (GIF) — только в пошаговой инструкции и на заставке, чтобы телевизору было легко.
+  function still(name) { return 'tv/a/' + name + (D.arts && D.arts[name] ? '.png' : '.jpg'); }
+  function scene(name, live) { return '<img class="scene" src="' + (live ? 'tv/g/' + name + '.gif' : still(name)) + '" alt="">'; }
   function list(items, kind) {
     return '<ul class="list ' + (kind || '') + '">' + map(items, function (x) {
       var k = kind === 'bad' ? 'cross' : kind === 'warn' ? 'alert' : 'check';
@@ -103,7 +108,7 @@
     var hts = D.howtos || [];
     return {
       title: '',
-      html: '<section class="hero"><div><h1>Помощник пациента</h1><p>Памятки и рекомендации клиники «Авалон» — выберите раздел кнопками пульта и нажмите OK</p></div></section>' +
+      html: '<section class="hero"><div><h1>Помощник пациента</h1><p>Памятки и рекомендации клиники «Авалон» — наведите курсор стрелками пульта и нажмите OK</p></div></section>' +
         '<h2 class="h">Памятки после лечения</h2><div class="grid g6 hm">' + map(secs, function (s, i) {
           var n = opsIn(s.id).length;
           return tile('#/guides/' + s.id, art(s.art, 'm'), esc(s.title), esc(s.short), '<span class="pill">' + n + ' ' + plural(n, 'памятка', 'памятки', 'памяток') + '</span>', i === 0 ? '" data-main="1' : '');
@@ -264,7 +269,7 @@
     return { title: 'Акция', html: html };
   }
 
-  function photo(d, cls) { return '<span class="photo ' + (cls || '') + '"><img src="img/' + d.photo + '.webp" alt=""></span>'; }
+  function photo(d, cls) { return '<span class="photo ' + (cls || '') + '"><img src="tv/p/' + d.photo + '.jpg" alt=""></span>'; }
   function viewDoctors() {
     return { title: 'Врачи', html: '<div class="grid g4">' + map(D.doctors, function (d, i) {
       return '<a class="f card doc" href="#/doctor/' + d.id + '"' + (i === 0 ? ' data-main="1"' : '') + '>' + photo(d) + '<b>' + esc(d.name) + '</b><span class="muted small">' + esc(d.roles.slice(0, 2).join(' · ')) + '</span>' +
@@ -300,8 +305,9 @@
       '<img class="tlogo" src="img/logo-white.svg" alt="Авалон">' + (title ? '<span class="ttl">' + esc(title) + '</span>' : '') +
       '<span class="tright">' + ic('phone') + esc(D.clinic.phone) + '<span class="clock" id="clock">' + clock() + '</span></span></header>';
   }
-  var FOOT = '<footer class="foot"><span><i class="key">' + ic('dpad') + '</i> стрелки — выбор</span><span><i class="key">OK</i> открыть</span><span><i class="key">Назад</i> вернуться</span>' +
-    '<span class="muted">Следуйте рекомендациям вашего лечащего врача</span></footer>';
+  // На обычном пульте LG стрелки в браузере двигают курсор (сайт их не получает) — поэтому крупные кнопки «Выше/Ниже»
+  var FOOT = '<footer class="foot"><span><i class="key">' + ic('dpad') + '</i> стрелки — курсор</span><span><i class="key">OK</i> открыть</span><span><i class="key">Назад</i> вернуться</span>' +
+    '<span class="scrollbtns"><a class="sbtn" href="#" data-act="up" id="sup">' + ic('up') + 'Выше</a><a class="sbtn" href="#" data-act="down" id="sdown">' + ic('down') + 'Ниже</a></span></footer>';
 
   function parts() { return location.hash.replace(/^#\/?/, '').split('/'); }
   function render() {
@@ -331,6 +337,7 @@
     if (!t && memo[location.hash] != null) t = fs[memo[location.hash]];
     if (!t) t = q('#main [data-main]') || q('#main .f') || fs[0];
     window.scrollTo(0, 0);
+    setTimeout(scrollBtns, 50);
     if (t) {
       focusEl(t);
       // первый показ экрана: если выбранный блок хотя бы начинается на экране — оставляем видимой шапку
@@ -394,17 +401,10 @@
     setTimeout(function () { if (location.hash === h) location.hash = '#/'; }, 350);
   }
 
-  // смена анимации: выбранная пультом картинка оживает, остальные стоят
+  // запоминаем выбранный элемент экрана
   document.addEventListener('focus', function (e) {
     var el = e.target; if (!el || !el.getAttribute) return;
     var k = el.getAttribute('data-k'); if (k != null) memo[location.hash] = +k;
-    var imgs = el.querySelectorAll ? el.querySelectorAll('img[data-a]') : [];
-    for (var i = 0; i < imgs.length; i++) imgs[i].src = 'art/' + imgs[i].getAttribute('data-a') + '.webp';
-  }, true);
-  document.addEventListener('blur', function (e) {
-    var el = e.target; if (!el || !el.querySelectorAll) return;
-    var imgs = el.querySelectorAll('img[data-a]');
-    for (var i = 0; i < imgs.length; i++) imgs[i].src = 'art/' + imgs[i].getAttribute('data-a') + '_s.webp';
   }, true);
 
   document.addEventListener('keydown', function (e) {
@@ -429,6 +429,7 @@
     if (el.getAttribute('data-rep')) { pendingFocus = el.getAttribute('data-pf'); location.replace(el.getAttribute('href')); return; }
     var act = el.getAttribute('data-act');
     if (act === 'back') goBack();
+    if (act === 'up' || act === 'down') { var b = bars(); window.scrollBy(0, (act === 'up' ? -1 : 1) * Math.round((window.innerHeight - b.top - b.bottom) * 0.7)); scrollBtns(); }
     if (act === 'auto') { HT.auto = !HT.auto; pendingFocus = '[data-act=auto]'; render(); }
   });
   // указка Magic Remote / мышь: наведение = выбор (без прокрутки)
@@ -439,6 +440,13 @@
   document.addEventListener('mousemove', function () { lastInput = now(); if (idleOn) stopIdle(); });
   document.addEventListener('wheel', function () { lastInput = now(); });
   window.addEventListener('hashchange', render);
+  // кнопки «Выше/Ниже» видны, только когда есть куда листать
+  function scrollBtns() {
+    var u = document.getElementById('sup'), d = document.getElementById('sdown'); if (!u || !d) return;
+    var y = window.pageYOffset, max = document.documentElement.scrollHeight - window.innerHeight;
+    u.className = 'sbtn' + (y > 4 ? '' : ' off'); d.className = 'sbtn' + (y < max - 4 ? '' : ' off');
+  }
+  window.addEventListener('scroll', scrollBtns);
 
   // ———————————— Заставка: если пультом не пользуются, показываем инструкции по кругу ————————————
   var idleOn = false, slides = [], si = 0, idleTimer = null;
@@ -448,9 +456,9 @@
     for (var i = 0; i < hts.length; i++) {
       for (var j = 0; j < hts[i].steps.length; j++) {
         var st = hts[i].steps[j];
-        slides.push({ img: 'art/' + st.scene + '.webp', kick: 'Как правильно · ' + hts[i].title, n: 'Шаг ' + (j + 1) + ' из ' + hts[i].steps.length, title: st.title, text: st.text });
+        slides.push({ img: 'tv/g/' + st.scene + '.gif', kick: 'Как правильно · ' + hts[i].title, n: 'Шаг ' + (j + 1) + ' из ' + hts[i].steps.length, title: st.title, text: st.text });
       }
-      if (i % 3 === 2) slides.push({ img: 'art/Tooth.webp', kick: 'Помощник пациента', n: '', title: 'Памятки после лечения — на этом экране', text: 'Возьмите пульт: стрелками выберите раздел и нажмите OK. Хирургия, терапия, ортопедия, гигиена, пародонтология и ортодонтия.' });
+      if (i % 3 === 2) slides.push({ img: still('Tooth'), kick: 'Помощник пациента', n: '', title: 'Памятки после лечения — на этом экране', text: 'Возьмите пульт: стрелками наведите курсор на раздел и нажмите OK. Хирургия, терапия, ортопедия, гигиена, пародонтология и ортодонтия.' });
     }
   }
   function showSlide() {
